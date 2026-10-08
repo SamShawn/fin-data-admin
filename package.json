@@ -1,0 +1,11 @@
+{
+  "name": "fin-data-admin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "金融数据后台管理系统",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
