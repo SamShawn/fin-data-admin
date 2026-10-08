@@ -9,10 +9,14 @@
   },
   "packageManager": "pnpm@9.0.0",
   "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
     "eslint": "^8.57.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
     "prettier": "^3.2.0",
-    "typescript": "^5.4.0",
-    "turbo": "^2.11.7"
+    "turbo": "^2.11.7",
+    "typescript": "^5.4.0"
   },
   "scripts": {
     "dev": "turbo run dev",
@@ -22,6 +26,16 @@
     "test": "turbo run test",
     "test:cov": "turbo run test:cov",
     "clean": "turbo run clean && rm -rf node_modules",
-    "format": "prettier --write \"**/*.{ts,tsx,json,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   }
 }
