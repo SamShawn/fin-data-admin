@@ -8,6 +8,15 @@ module.exports = {
     // 根目录的 ts 文件（如 scripts/）通常不在 tsconfig 的 include 中
     // 若开启类型相关规则，需要 project 配置；先不配，避免"文件不在 tsconfig"报错
   },
+  // 关键：配置 TypeScript 解析器
+  settings: {
+    'import/resolver': {
+      typescript: {
+        // 可选：指向具体的 tsconfig，monorepo 下建议留空或配 glob
+        project: ['packages/*/tsconfig.json', 'apps/*/tsconfig.json'],
+      },
+    },
+  },
   ignorePatterns: [
     'node_modules/',
     'dist/',
