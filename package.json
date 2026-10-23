@@ -29,6 +29,9 @@
     "test:cov": "turbo run test:cov",
     "clean": "turbo run clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "infra:up": "docker compose -f infra/docker/docker-compose.dev.yml --env-file .env up -d",
+    "infra:down": "docker compose -f infra/docker/docker-compose.dev.yml --env-file .env down",
+    "infra:logs": "docker compose -f infra/docker/docker-compose.dev.yml logs -f",
     "prepare": "husky"
   },
   "lint-staged": {
