@@ -32,14 +32,13 @@
     "infra:up": "docker compose -f infra/docker/docker-compose.dev.yml --env-file .env up -d",
     "infra:down": "docker compose -f infra/docker/docker-compose.dev.yml --env-file .env down",
     "infra:logs": "docker compose -f infra/docker/docker-compose.dev.yml logs -f",
-    "prepare": "husky"
+    "prepare": "husky && turbo run build"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
+    "apps/*/src/**/*.{ts,tsx}": [
+      "eslint --fix"
     ],
-    "*.{json,md,yml,yaml}": [
+    "*.{ts,tsx,json,md,yml,yaml}": [
       "prettier --write"
     ]
   }
