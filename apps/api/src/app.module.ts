@@ -8,19 +8,36 @@ import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { validateEnv } from './config/env.validation';
+import { AuditLog } from './entities/audit-log.entity';
+import { Permission } from './entities/permission.entity';
+import { Role } from './entities/role.entity';
+import { User } from './entities/user.entity';
 import { HealthModule } from './health/health.module';
 import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
-    // 配置模块，全局可用，并加载 zod 校验
+    // 1. 配置模块
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '../../.env', // 指向 monorepo 根目录的 .env
+      envFilePath: '../../.env',
       validate: validateEnv,
     }),
 
-    // TypeORM 配置
+    // 2. 日志模块
+    LoggerModule.forRoot({
+      pinoHttp: {
+        genReqId: (req) => (req.headers['x-request-id'] as string) || randomUUID(),
+        customProps: () => ({ context: 'HTTP' }),
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { colorize: true, singleLine: true } }
+            : undefined,
+        autoLogging: true,
+      },
+    }),
+
+    // 3. 数据库模块
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -31,27 +48,14 @@ import { RedisModule } from './redis/redis.module';
         username: config.get<string>('DB_USER', 'fin'),
         password: config.get<string>('DB_PASSWORD', 'fin_dev'),
         database: config.get<string>('DB_NAME', 'fin_data'),
-        autoLoadEntities: true,
-        synchronize: false, // 绝对不要开启，所有表结构通过迁移控制
+        // 注册实体
+        entities: [User, Role, Permission, AuditLog],
+        synchronize: false, // 绝对不要开启，所有表结构通过 SQL 迁移控制
         logging: config.get<string>('DB_LOGGING') === 'true',
       }),
     }),
 
-    LoggerModule.forRoot({
-      pinoHttp: {
-        genReqId: (req) => (req.headers['x-request-id'] as string) || randomUUID(),
-        customProps: () => ({ context: 'HTTP' }),
-        transport:
-          process.env.NODE_ENV !== 'production'
-            ? {
-                target: 'pino-pretty',
-                options: { colorize: true, singleLine: true },
-              }
-            : undefined,
-        autoLogging: true,
-      },
-    }),
-
+    // 4. 其他模块
     RedisModule,
     HealthModule,
   ],
