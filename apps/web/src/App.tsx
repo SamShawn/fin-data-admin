@@ -1,9 +1,14 @@
-function App() {
+import { ConfigProvider } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
+import { RouterProvider } from 'react-router-dom';
+
+import 'antd/dist/reset.css';
+import { router } from './router';
+
+export default function App() {
   return (
-    <div>
-      <h1>Fin Data Admin 前端骨架已就绪</h1>
-    </div>
+    <ConfigProvider locale={zhCN} theme={{ token: { colorPrimary: '#1677ff' } }}>
+      <RouterProvider router={router} />
+    </ConfigProvider>
   );
 }
-
-export default App;
