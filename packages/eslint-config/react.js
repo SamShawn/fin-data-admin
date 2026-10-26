@@ -5,7 +5,7 @@ module.exports = {
     react: { version: 'detect' },
   },
   rules: {
-    'react/react-in-jsx-scope': 'off', // React 17+ 不需要 import React
+    'react/react-in-jsx-scope': 'off',
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
   },
