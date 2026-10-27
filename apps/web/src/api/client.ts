@@ -31,14 +31,36 @@ apiClient.interceptors.response.use(
     }
     return res.data !== undefined ? res.data : res;
   },
-  (error) => {
+  async (error) => {
     const status = error.response?.status;
     const msg = error.response?.data?.message || error.message || '网络错误';
 
+    // 在响应拦截器的 401 分支中
     if (status === 401) {
-      message.error('登录已过期，请重新登录');
-      useAuthStore.getState().logout();
-      // 可以在这里跳转登录页
+      // 如果没 refreshToken 或者是登录接口本身报错，直接踢出
+      const refreshToken = useAuthStore.getState().refreshToken;
+      if (!refreshToken || error.config.url.includes('/auth/login')) {
+        useAuthStore.getState().logout();
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+
+      try {
+        // 尝试刷新 Token
+        const res = await axios.post(`${apiClient.defaults.baseURL}/auth/refresh`, {
+          refreshToken,
+        });
+        const { accessToken: newAccess, refreshToken: newRefresh, user } = res.data.data;
+        useAuthStore.getState().setAuth(newAccess, newRefresh, user);
+
+        // 重新发送原请求
+        error.config.headers.Authorization = `Bearer ${newAccess}`;
+        return apiClient.request(error.config);
+      } catch (refreshErr) {
+        useAuthStore.getState().logout();
+        window.location.href = '/login';
+        return Promise.reject(refreshErr);
+      }
     } else if (status === 403) {
       message.error('无权限执行此操作');
     } else {
