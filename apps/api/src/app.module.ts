@@ -2,17 +2,20 @@ import { randomUUID } from 'crypto';
 
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { validateEnv } from './config/env.validation';
 import { AuditLog } from './entities/audit-log.entity';
 import { Permission } from './entities/permission.entity';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
 import { HealthModule } from './health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { RedisModule } from './redis/redis.module';
 
 @Module({
@@ -58,8 +61,9 @@ import { RedisModule } from './redis/redis.module';
     // 4. 其他模块
     RedisModule,
     HealthModule,
+    AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
 export class AppModule {}

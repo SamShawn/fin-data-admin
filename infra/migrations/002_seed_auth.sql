@@ -22,7 +22,7 @@ SELECT r.id, p.id FROM roles r, permissions p WHERE r.code = 'admin';
 -- 4. 插入默认管理员账号 (密码替换为真实的 hash)
 -- 假设密码是 admin123
 INSERT INTO users (username, password_hash, display_name, department)
-VALUES ('admin', '$2b$10$eXgB3Uom/UXcpIiGfffDCuBWnerw2gaHPh9LQfLk9Dj0WQsb.wqJu', '超级管理员', 'IT部');
+VALUES ('admin', '$2b$10$hCNk0jFVywlItvKKZ8zPme2Dm3QrKjeuMGc31Sh6YAjSwWRGEUer2', '超级管理员', 'IT部');
 
 -- 5. 给 admin 账号绑定 admin 角色
 INSERT INTO user_roles (user_id, role_id)

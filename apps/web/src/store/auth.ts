@@ -1,12 +1,6 @@
+import { User } from '@fin/shared-types'; // 👈 从共享包引入
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-// 先定义基础类型，等 Sprint 2 接入登录后可以引入 @fin/shared-types
-interface User {
-  id: string;
-  username: string;
-  displayName: string;
-}
 
 interface AuthState {
   accessToken: string | null;
@@ -26,7 +20,7 @@ export const useAuthStore = create<AuthState>()(
       logout: () => set({ accessToken: null, refreshToken: null, user: null }),
     }),
     {
-      name: 'fin-auth-storage', // 自动持久化到 localStorage
+      name: 'fin-auth-storage',
     },
   ),
 );
