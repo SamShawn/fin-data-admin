@@ -1,5 +1,5 @@
 import { DashboardOutlined, TableOutlined, SettingOutlined } from '@ant-design/icons';
-import { Layout, Menu, theme } from 'antd';
+import { Layout, Menu, theme, MenuProps } from 'antd';
 import { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
@@ -7,14 +7,11 @@ import { usePermission } from '../hooks/usePermission';
 
 const { Header, Content, Sider } = Layout;
 
-// 1. 定义带层级和权限的菜单项
-interface MenuConfig {
-  key: string;
-  icon?: React.ReactNode;
-  label: string;
+// 👇 关键修复 1：继承 Antd 的 ItemType，彻底解决类型不兼容
+type MenuConfig = NonNullable<MenuProps['items']>[number] & {
   permission?: string;
   children?: MenuConfig[];
-}
+};
 
 const MENU_CONFIG: MenuConfig[] = [
   { key: '/', icon: <DashboardOutlined />, label: '概览' },
@@ -42,27 +39,26 @@ export function AppLayout() {
   const { token } = theme.useToken();
   const { hasPermission } = usePermission();
 
-  // 2. 递归过滤菜单
+  // 👇 关键修复 2：递归过滤时，绝不返回 undefined，要么返回对象，要么就不放进数组
   const filterMenus = (menus: MenuConfig[]): MenuConfig[] => {
-    return menus
-      .map((menu) => {
-        // 如果有子菜单，递归过滤
-        if (menu.children) {
-          const filteredChildren = filterMenus(menu.children);
-          // 如果子菜单全部被过滤掉了，父级菜单也不显示
-          if (filteredChildren.length === 0) return null;
-          return { ...menu, children: filteredChildren };
-        }
+    const result: MenuConfig[] = [];
 
-        // 如果没有权限要求，或者用户拥有该权限，则保留
-        if (!menu.permission || hasPermission(menu.permission)) {
-          return menu;
+    for (const menu of menus) {
+      // 如果有子菜单
+      if (menu.children && menu.children.length > 0) {
+        const filteredChildren = filterMenus(menu.children as MenuConfig[]);
+        if (filteredChildren.length > 0) {
+          result.push({ ...menu, children: filteredChildren });
         }
+        continue;
+      }
 
-        // 没有权限，过滤掉
-        return null;
-      })
-      .filter((menu): menu is MenuConfig => menu !== null);
+      // 如果没有权限要求，或者用户拥有该权限，则保留
+      if (!menu.permission || hasPermission(menu.permission)) {
+        result.push(menu);
+      }
+    }
+    return result;
   };
 
   const visibleMenus = filterMenus(MENU_CONFIG);
@@ -90,9 +86,20 @@ export function AppLayout() {
           selectedKeys={[location.pathname]}
           items={visibleMenus}
           onClick={({ key }) => {
-            // 只有叶子节点才跳转（有 children 的节点默认是展开/收起）
-            const isLeaf = !MENU_CONFIG.find((m) => m.key === key)?.children;
-            if (isLeaf) navigate(key);
+            const findMenu = (menus: MenuConfig[], targetKey: string): MenuConfig | undefined => {
+              for (const m of menus) {
+                if (m.key === targetKey) return m;
+                if (m.children) {
+                  const found = findMenu(m.children as MenuConfig[], targetKey);
+                  if (found) return found;
+                }
+              }
+              return undefined;
+            };
+            const current = findMenu(MENU_CONFIG, key);
+            if (current && (!current.children || current.children.length === 0)) {
+              navigate(key);
+            }
           }}
         />
       </Sider>
