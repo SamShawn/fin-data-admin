@@ -17,6 +17,7 @@ import { Permission } from './entities/permission.entity';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
 import { HealthModule } from './health/health.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { RedisModule } from './redis/redis.module';
@@ -66,6 +67,7 @@ import { RedisModule } from './redis/redis.module';
     HealthModule,
     AuthModule,
     AuditModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
