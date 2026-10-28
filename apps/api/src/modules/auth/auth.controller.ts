@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { z } from 'zod';
 
+import { Auditable } from '../../common/decorators/auditable.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 
 import { AuthService } from './auth.service';
@@ -35,8 +36,13 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(200)
   async logout(@Req() req: Request) {
-    // 👈 替换 any
     const token = req.headers.authorization?.replace('Bearer ', '');
     return this.authService.logout(token || '');
+  }
+
+  @Post('test-audit')
+  @Auditable({ module: 'test', action: 'CREATE' })
+  async testAudit(@Body() body: unknown) {
+    return { success: true, received: body };
   }
 }

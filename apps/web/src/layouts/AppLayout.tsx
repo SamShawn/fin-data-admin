@@ -1,4 +1,4 @@
-import { DashboardOutlined, TableOutlined, UserOutlined } from '@ant-design/icons';
+import { DashboardOutlined, TableOutlined, UserOutlined, AuditOutlined } from '@ant-design/icons';
 import { Layout, Menu, theme } from 'antd';
 import { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
@@ -27,6 +27,12 @@ export function AppLayout() {
       icon: <UserOutlined />,
       label: '用户管理',
       permission: 'sys:user:read',
+    },
+    {
+      key: '/audit-logs',
+      icon: <AuditOutlined />,
+      label: '审计日志',
+      permission: 'sys:audit:read',
     },
   ];
 
