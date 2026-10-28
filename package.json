@@ -17,6 +17,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "prettier": "^3.2.0",
+    "tsx": "^4.23.15",
     "turbo": "^2.11.7",
     "typescript": "5.9.3"
   },
@@ -35,6 +36,7 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "db:shell": "docker exec -it fin-postgres psql -U fin -d fin_data",
+    "db:seed:large": "tsx apps/api/src/scripts/seed-market.ts",
     "infra:up": "docker compose -f infra/docker/docker-compose.dev.yml --env-file .env up -d",
     "infra:down": "docker compose -f infra/docker/docker-compose.dev.yml --env-file .env down",
     "infra:logs": "docker compose -f infra/docker/docker-compose.dev.yml logs -f",
