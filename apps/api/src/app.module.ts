@@ -9,6 +9,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { PermissionGuard } from './common/guards/permission.guard';
 import { validateEnv } from './config/env.validation';
 import { AuditLog } from './entities/audit-log.entity';
 import { Permission } from './entities/permission.entity';
@@ -64,6 +65,10 @@ import { RedisModule } from './redis/redis.module';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: PermissionGuard }, // 👈 注意顺序：先认证，再鉴权
+  ],
 })
 export class AppModule {}
