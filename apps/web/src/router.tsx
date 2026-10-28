@@ -7,6 +7,8 @@ import LoginPage from './pages/Login';
 const HomePage = lazy(() => import('./pages/Home'));
 const NotFound = lazy(() => import('./pages/404'));
 const AuditLogPage = lazy(() => import('./pages/AuditLog'));
+const UserManage = lazy(() => import('./pages/admin/UserManage'));
+const RoleManage = lazy(() => import('./pages/admin/RoleManage'));
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +22,8 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: '*', element: <NotFound /> },
       { path: '/audit-logs', element: <AuditLogPage /> },
+      { path: '/admin/users', element: <UserManage /> },
+      { path: '/admin/roles', element: <RoleManage /> },
     ],
   },
 ]);

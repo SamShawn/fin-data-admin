@@ -22,7 +22,7 @@ export class AuditController {
   ) {
     const qb = this.auditRepo
       .createQueryBuilder('a')
-      .orderBy('a.created_at', 'DESC')
+      .orderBy('a.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
