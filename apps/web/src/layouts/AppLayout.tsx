@@ -1,13 +1,21 @@
-import { DashboardOutlined, TableOutlined, SettingOutlined } from '@ant-design/icons';
-import { Layout, Menu, theme, MenuProps } from 'antd';
+import {
+  DashboardOutlined,
+  TableOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
+import { Layout, Menu, theme, MenuProps, Button, message } from 'antd';
 import { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
+import { apiClient } from '../api/client';
 import { usePermission } from '../hooks/usePermission';
+import { useAuthStore } from '../store/auth';
 
 const { Header, Content, Sider } = Layout;
 
-// 👇 关键修复 1：继承 Antd 的 ItemType，彻底解决类型不兼容
+// 继承 Antd 的 ItemType，彻底解决类型不兼容
 type MenuConfig = NonNullable<MenuProps['items']>[number] & {
   permission?: string;
   children?: MenuConfig[];
@@ -39,12 +47,14 @@ export function AppLayout() {
   const { token } = theme.useToken();
   const { hasPermission } = usePermission();
 
-  // 👇 关键修复 2：递归过滤时，绝不返回 undefined，要么返回对象，要么就不放进数组
+  // 获取当前用户与登出方法
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+
   const filterMenus = (menus: MenuConfig[]): MenuConfig[] => {
     const result: MenuConfig[] = [];
 
     for (const menu of menus) {
-      // 如果有子菜单
       if (menu.children && menu.children.length > 0) {
         const filteredChildren = filterMenus(menu.children as MenuConfig[]);
         if (filteredChildren.length > 0) {
@@ -53,7 +63,6 @@ export function AppLayout() {
         continue;
       }
 
-      // 如果没有权限要求，或者用户拥有该权限，则保留
       if (!menu.permission || hasPermission(menu.permission)) {
         result.push(menu);
       }
@@ -62,6 +71,21 @@ export function AppLayout() {
   };
 
   const visibleMenus = filterMenus(MENU_CONFIG);
+
+  // 处理登出逻辑
+  const handleLogout = async () => {
+    try {
+      // 通知后端把 Token 加入黑名单
+      await apiClient.post('/auth/logout');
+    } catch {
+      // 👈 直接 catch 留空，不写 (e)
+      // 即使后端请求失败，前端也要强制登出
+    } finally {
+      logout(); // 清除 Zustand 里的状态和 localStorage
+      message.success('已退出登录');
+      navigate('/login');
+    }
+  };
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -111,9 +135,18 @@ export function AppLayout() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
+            gap: 16,
           }}
         >
-          <span>Admin</span>
+          {/* 显示当前用户 */}
+          <span style={{ fontSize: 14, color: '#666' }}>
+            <UserOutlined style={{ marginRight: 4 }} />
+            {user?.displayName || user?.username || 'Admin'}
+          </span>
+          {/* 退出登录按钮 */}
+          <Button type="text" danger icon={<LogoutOutlined />} onClick={handleLogout}>
+            退出登录
+          </Button>
         </Header>
         <Content
           style={{
