@@ -1,4 +1,12 @@
-import { useReactTable, getCoreRowModel, flexRender, ColumnDef } from '@tanstack/react-table';
+import { CaretUpOutlined, CaretDownOutlined } from '@ant-design/icons';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+  ColumnDef,
+  SortingState,
+} from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useRef } from 'react';
 
@@ -8,6 +16,9 @@ interface VirtualTableProps<T> {
   fetchNextPage: () => void;
   hasMore: boolean;
   loading: boolean;
+  sorting: SortingState;
+  onSortingChange: (sorting: SortingState) => void;
+  columnVisibility: Record<string, boolean>;
 }
 
 export function VirtualTable<T>({
@@ -16,15 +27,24 @@ export function VirtualTable<T>({
   fetchNextPage,
   hasMore,
   loading,
+  sorting,
+  onSortingChange,
+  columnVisibility,
 }: VirtualTableProps<T>) {
   const table = useReactTable({
     data,
     columns,
+    state: { sorting, columnVisibility },
+    onSortingChange: (updater) => {
+      const nextState = typeof updater === 'function' ? updater(sorting) : updater;
+      onSortingChange(nextState);
+    },
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    manualSorting: true, // 声明是服务端排序，前端只展示状态
   });
 
   const parentRef = useRef<HTMLDivElement>(null);
-
   const rowVirtualizer = useVirtualizer({
     count: table.getRowModel().rows.length,
     getScrollElement: () => parentRef.current,
@@ -60,13 +80,40 @@ export function VirtualTable<T>({
         }}
       >
         {table.getHeaderGroups()[0].headers.map((header) => (
-          <div key={header.id} style={{ flex: 1, padding: '10px 16px', minWidth: 100 }}>
+          <div
+            key={header.id}
+            onClick={header.column.getToggleSortingHandler()}
+            style={{
+              flex: 1,
+              padding: '10px 16px',
+              minWidth: 100,
+              cursor: header.column.getCanSort() ? 'pointer' : 'default',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              userSelect: 'none',
+            }}
+          >
             {flexRender(header.column.columnDef.header, header.getContext())}
+            {/* 排序图标 */}
+            {header.column.getCanSort() && (
+              <span style={{ fontSize: 10, color: '#bfbfbf' }}>
+                {{
+                  asc: <CaretUpOutlined style={{ color: '#1677ff' }} />,
+                  desc: <CaretDownOutlined style={{ color: '#1677ff' }} />,
+                }[header.column.getIsSorted() as string] ?? (
+                  <span style={{ display: 'flex', flexDirection: 'column' }}>
+                    <CaretUpOutlined />
+                    <CaretDownOutlined style={{ marginTop: -6 }} />
+                  </span>
+                )}
+              </span>
+            )}
           </div>
         ))}
       </div>
 
-      {/* 虚拟滚动容器 */}
+      {/* 虚拟滚动列表 */}
       <div style={{ height: rowVirtualizer.getTotalSize(), position: 'relative' }}>
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const row = table.getRowModel().rows[virtualRow.index];
