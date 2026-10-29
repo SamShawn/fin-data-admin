@@ -99,3 +99,19 @@ export function useMarketData(initialFilters: Filters = {}) {
     filters,
   };
 }
+
+export function downloadCsv(filters: Filters) {
+  return apiClient
+    .get('/market-data/export', {
+      params: filters,
+      responseType: 'blob', // 告诉 Axios 接收二进制文件
+    })
+    .then((blob: unknown) => {
+      const url = URL.createObjectURL(blob as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `market_data_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+}
