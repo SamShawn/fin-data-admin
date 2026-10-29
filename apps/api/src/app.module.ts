@@ -13,6 +13,7 @@ import { PermissionGuard } from './common/guards/permission.guard';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { validateEnv } from './config/env.validation';
 import { AuditLog } from './entities/audit-log.entity';
+import { DailyQuote } from './entities/daily-quote.entity';
 import { Permission } from './entities/permission.entity';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
@@ -20,6 +21,7 @@ import { HealthModule } from './health/health.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { MarketDataModule } from './modules/market-data/market-data.module';
 import { RedisModule } from './redis/redis.module';
 
 @Module({
@@ -56,7 +58,7 @@ import { RedisModule } from './redis/redis.module';
         password: config.get<string>('DB_PASSWORD', 'fin_dev'),
         database: config.get<string>('DB_NAME', 'fin_data'),
         // 注册实体
-        entities: [User, Role, Permission, AuditLog],
+        entities: [User, Role, Permission, AuditLog, DailyQuote],
         synchronize: false, // 绝对不要开启，所有表结构通过 SQL 迁移控制
         logging: config.get<string>('DB_LOGGING') === 'true',
       }),
@@ -68,6 +70,7 @@ import { RedisModule } from './redis/redis.module';
     AuthModule,
     AuditModule,
     AdminModule,
+    MarketDataModule,
   ],
   controllers: [AppController],
   providers: [
