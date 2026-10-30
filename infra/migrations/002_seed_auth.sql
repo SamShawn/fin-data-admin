@@ -7,23 +7,31 @@ INSERT INTO permissions (code, name, module) VALUES
 ('sys:role:write', '编辑角色', 'role'),
 ('sys:audit:read', '查看审计', 'audit'),
 ('sys:market_data:read', '查看行情', 'market_data'),
-('sys:market_data:export', '导出行情', 'market_data');
+('sys:market_data:export', '导出行情', 'market_data'),
+('biz:strategy:read', '查看策略', 'strategy'),
+('biz:strategy:write', '编辑策略', 'strategy')
+ON CONFLICT (code) DO NOTHING;
 
 -- 2. 插入角色
 INSERT INTO roles (code, name, data_scope) VALUES
 ('admin', '系统管理员', 'ALL'),
 ('researcher', '投研人员', 'DEPT'),
-('viewer', '普通访客', 'SELF');
+('viewer', '普通访客', 'SELF')
+ON CONFLICT (code) DO NOTHING;
 
 -- 3. 给 admin 角色分配所有权限
+-- 注意：这里用 SELECT 联查，且加上 ON CONFLICT 避免重复插入关联关系
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r, permissions p WHERE r.code = 'admin';
+SELECT r.id, p.id FROM roles r, permissions p WHERE r.code = 'admin'
+ON CONFLICT DO NOTHING;
 
--- 4. 插入默认管理员账号 (密码替换为真实的 hash)
--- 假设密码是 admin123
+-- 4. 插入默认管理员账号
+-- 注意：你需要在执行前把 '你的BCRYPT_HASH' 替换为真实的 hash (比如 admin123 的 hash)
 INSERT INTO users (username, password_hash, display_name, department)
-VALUES ('admin', '$2b$10$hCNk0jFVywlItvKKZ8zPme2Dm3QrKjeuMGc31Sh6YAjSwWRGEUer2', '超级管理员', 'IT部');
+VALUES ('admin', '$2b$10$hCNk0jFVywlItvKKZ8zPme2Dm3QrKjeuMGc31Sh6YAjSwWRGEUer2', '超级管理员', 'IT部')
+ON CONFLICT (username) DO NOTHING;
 
 -- 5. 给 admin 账号绑定 admin 角色
 INSERT INTO user_roles (user_id, role_id)
-SELECT u.id, r.id FROM users u, roles r WHERE u.username = 'admin' AND r.code = 'admin';
+SELECT u.id, r.id FROM users u, roles r WHERE u.username = 'admin' AND r.code = 'admin'
+ON CONFLICT DO NOTHING;
