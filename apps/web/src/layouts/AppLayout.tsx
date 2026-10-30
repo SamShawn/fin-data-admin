@@ -1,6 +1,7 @@
 import {
   DashboardOutlined,
   TableOutlined,
+  FundOutlined,
   SettingOutlined,
   LogoutOutlined,
   UserOutlined,
@@ -28,6 +29,12 @@ const MENU_CONFIG: MenuConfig[] = [
     icon: <TableOutlined />,
     label: '行情数据',
     permission: 'sys:market_data:read',
+  },
+  {
+    key: '/strategies',
+    icon: <FundOutlined />,
+    label: '策略配置',
+    permission: 'biz:strategy:read',
   },
   {
     key: '/admin',

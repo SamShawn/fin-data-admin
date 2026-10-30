@@ -10,6 +10,7 @@ const AuditLogPage = lazy(() => import('./pages/AuditLog'));
 const UserManage = lazy(() => import('./pages/admin/UserManage'));
 const RoleManage = lazy(() => import('./pages/admin/RoleManage'));
 const MarketDataPage = lazy(() => import('./pages/MarketData'));
+const StrategyPage = lazy(() => import('./pages/Strategy'));
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
       { path: '/admin/users', element: <UserManage /> },
       { path: '/admin/roles', element: <RoleManage /> },
       { path: '/market-data', element: <MarketDataPage /> },
+      { path: '/strategies', element: <StrategyPage /> },
     ],
   },
 ]);
