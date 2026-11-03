@@ -1,12 +1,17 @@
 from datetime import datetime, timedelta
 from .sources.tushare import TushareSource
+from .transformers.market_data import transform_daily_quotes
+from .validators.engine import ValidatorEngine
+from .loaders.rejected import save_rejected
 from .logger import setup_logging
 import structlog
+from pathlib import Path
 
 setup_logging()
 logger = structlog.get_logger()
 
 def sync_daily_quotes(target_date: str | None = None):
+    # 1. 拉取
     source = TushareSource()
 
     # 如果指定了日期（手动补数）
@@ -31,13 +36,24 @@ def sync_daily_quotes(target_date: str | None = None):
                 logger.info("数据已是最新，无需拉取")
                 return
 
-    df = source.fetch(start_date, end_date)
-    if df.empty:
+    raw_df = source.fetch(start_date, end_date)
+    if raw_df.empty:
         logger.info("没有可用的新数据")
         return
 
-    # 后续：transform -> validate -> load
-    logger.info("数据拉取完毕，准备进入下一步", rows=len(df))
+    # 2. 清洗
+    clean_df = transform_daily_quotes(raw_df)
+
+    # 3. 校验
+    config_path = str(Path(__file__).resolve().parent.parent / "config/validation/market_data.yaml")
+    validator = ValidatorEngine(config_path)
+    passed_df, rejected_df = validator.validate(clean_df)
+
+    # 4. 隔离失败数据
+    save_rejected("tushare_daily", rejected_df)
+
+    # 5. 入库（下一节实现，这里先打印）
+    logger.info("数据准备就绪，等待入库", passed=len(passed_df), rejected=len(rejected_df))
 
 if __name__ == "__main__":
     import sys
