@@ -41,3 +41,4 @@ coverage/
 # 缓存
 .turbo/
 .cache/
+.envrc
