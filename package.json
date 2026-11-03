@@ -37,6 +37,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "db:shell": "docker exec -it fin-postgres psql -U fin -d fin_data",
     "db:seed:large": "tsx apps/api/src/scripts/seed-market.ts",
+    "etl:run": "cd apps/etl && python -m etl.main",
+    "etl:build": "docker build -t fin-etl -f apps/etl/Dockerfile apps/etl",
     "infra:up": "docker compose -f infra/docker/docker-compose.dev.yml --env-file .env up -d",
     "infra:down": "docker compose -f infra/docker/docker-compose.dev.yml --env-file .env down",
     "infra:logs": "docker compose -f infra/docker/docker-compose.dev.yml logs -f",
