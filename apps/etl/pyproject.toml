@@ -9,12 +9,14 @@ dependencies = [
     "pandas>=2.0",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
+    "python-dateutil>=2.8.2",
+    "schedule>=1.2.0",
     "httpx>=0.25",
     "tenacity>=8.2",
     "structlog>=24.0",
     "pyyaml>=6.0",
     "tushare>=1.2.89",
-    "six>=1.16.0", 
+    "six>=1.16.0",
 ]
 
 [project.optional-dependencies]
@@ -26,3 +28,9 @@ dev = [
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["etl"]  # 明确告诉 setuptools 只把 etl 目录当作 Python 代码包
+
+[tool.setuptools.package-data]
+etl = ["../config/validation/*.yaml"] # 把 config 当作数据文件打包进去
