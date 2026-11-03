@@ -1,0 +1,29 @@
+rules:
+  - field: stock_code
+    type: not_null
+    level: block
+    message: '股票代码不能为空'
+  - field: stock_code
+    type: regex
+    params:
+      pattern: "^\\d{6}\\.(SZ|SH|BJ)$"
+    level: block
+    message: '股票代码格式不合法'
+  - field: trade_date
+    type: not_null
+    level: block
+    message: '交易日期不能为空'
+  - field: close
+    type: range
+    params:
+      min: 0.01
+      max: 100000
+    level: block
+    message: '收盘价超出合理范围'
+  - field: pct_change
+    type: range
+    params:
+      min: -0.2
+      max: 0.2
+    level: warn
+    message: '涨跌幅超出 ±20%，可能是 ST 股或异常数据'

@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     db_name: str = "fin_data"
     tushare_token: str = ""
     log_level: str = "INFO"
+    node_env: str = "development"
 
     model_config = SettingsConfigDict(
         # 向上寻找到 monorepo 的根目录 .env
