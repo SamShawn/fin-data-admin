@@ -10,8 +10,10 @@ export function matchPermission(required: string, owned: string): boolean {
   const ownParts = owned.split(':');
 
   // 如果拥有的权限后缀是 .*，代表全匹配
-  if (ownParts[ownParts.length - 1] === '*' && ownParts[ownParts.length - 2] === '.*') {
-    return true;
+  if (owned.endsWith('.*')) {
+    // 验证前缀是否匹配
+    const prefix = owned.replace('.*', '');
+    return required.startsWith(prefix);
   }
 
   for (let i = 0; i < Math.max(reqParts.length, ownParts.length); i++) {
@@ -20,14 +22,7 @@ export function matchPermission(required: string, owned: string): boolean {
 
     if (o === undefined) return false;
     if (r === undefined) return true;
-
-    if (o === '*') continue; // 单段通配符
-
-    // 处理 sys.* 这种多级 scope
-    if (o === '.*') {
-      return true; // 匹配剩余所有
-    }
-
+    if (o === '*') continue;
     if (r !== o) return false;
   }
   return true;

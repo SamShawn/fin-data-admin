@@ -38,8 +38,17 @@ jobs:
       - name: Run TypeScript type check
         run: pnpm typecheck
 
-      - name: Run backend tests
-        run: pnpm --filter @fin/api test
+      - name: Run backend tests with coverage
+        run: pnpm --filter @fin/api test:cov
+
+      - name: Run frontend tests
+        run: pnpm --filter @fin/web test
+
+      # 可选：运行 E2E (在 CI 中跑 E2E 需要先启动前后端服务)
+      # - name: Install Playwright Browsers
+      #   run: pnpm exec playwright install --with-deps
+      # - name: Run E2E tests
+      #   run: pnpm exec playwright test
 
   build-images:
     name: Build Docker Images

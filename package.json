@@ -12,6 +12,7 @@
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@fin/eslint-config": "workspace:*",
+    "@playwright/test": "^1.64.1",
     "eslint": "^8.57.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "husky": "^9.1.7",
