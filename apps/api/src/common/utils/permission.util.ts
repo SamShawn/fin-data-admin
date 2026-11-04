@@ -6,15 +6,15 @@
 export function matchPermission(required: string, owned: string): boolean {
   if (required === owned) return true;
 
-  const reqParts = required.split(':');
-  const ownParts = owned.split(':');
-
-  // 如果拥有的权限后缀是 .*，代表全匹配
-  if (owned.endsWith('.*')) {
-    // 验证前缀是否匹配
-    const prefix = owned.replace('.*', '');
+  // 处理类似于 sys.*:*:* 这种带有 .* 的通配符
+  if (owned.includes('.*')) {
+    const prefix = owned.substring(0, owned.indexOf('.*'));
     return required.startsWith(prefix);
   }
+
+  // 处理普通通配符 sys:*:*
+  const reqParts = required.split(':');
+  const ownParts = owned.split(':');
 
   for (let i = 0; i < Math.max(reqParts.length, ownParts.length); i++) {
     const r = reqParts[i];

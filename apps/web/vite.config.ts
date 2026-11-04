@@ -13,7 +13,7 @@ export default defineConfig({
   // 👇 新增测试配置
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'happy-dom',
     setupFiles: './src/setupTests.ts',
   },
   build: {

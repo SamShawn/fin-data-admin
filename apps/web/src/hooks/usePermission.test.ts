@@ -1,4 +1,3 @@
-// @vitest-environment node
 import { renderHook } from '@testing-library/react';
 import { describe, it, expect, beforeEach } from 'vitest';
 
@@ -8,7 +7,6 @@ import { usePermission } from './usePermission';
 
 describe('usePermission Hook', () => {
   beforeEach(() => {
-    // 模拟用户登录并拥有某些权限
     useAuthStore.setState({
       user: {
         id: '1',
