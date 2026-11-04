@@ -2,8 +2,10 @@ import { Controller, Get, Inject, Logger } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { DataSource } from 'typeorm';
 
+import { Public } from '../common/decorators/public.decorator';
 import { REDIS_CLIENT } from '../redis/redis.module';
 
+@Public()
 @Controller('health')
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
