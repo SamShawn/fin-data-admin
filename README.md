@@ -20,3 +20,6 @@
 ## 文档索引
 - [架构文档](docs/architecture.md)
 - [接口契约](docs/api-contract.md)
+- [ETL 校验规则](docs/etl-rules.md)
+- [运维手册](docs/runbook.md)
+- [性能报告](docs/perf-report.md)
