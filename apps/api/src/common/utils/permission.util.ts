@@ -6,13 +6,15 @@
 export function matchPermission(required: string, owned: string): boolean {
   if (required === owned) return true;
 
+  // 处理类似于 sys.*:*:* 这种带有 .* 的通配符
+  if (owned.includes('.*')) {
+    const prefix = owned.substring(0, owned.indexOf('.*'));
+    return required.startsWith(prefix);
+  }
+
+  // 处理普通通配符 sys:*:*
   const reqParts = required.split(':');
   const ownParts = owned.split(':');
-
-  // 如果拥有的权限后缀是 .*，代表全匹配
-  if (ownParts[ownParts.length - 1] === '*' && ownParts[ownParts.length - 2] === '.*') {
-    return true;
-  }
 
   for (let i = 0; i < Math.max(reqParts.length, ownParts.length); i++) {
     const r = reqParts[i];
@@ -20,14 +22,7 @@ export function matchPermission(required: string, owned: string): boolean {
 
     if (o === undefined) return false;
     if (r === undefined) return true;
-
-    if (o === '*') continue; // 单段通配符
-
-    // 处理 sys.* 这种多级 scope
-    if (o === '.*') {
-      return true; // 匹配剩余所有
-    }
-
+    if (o === '*') continue;
     if (r !== o) return false;
   }
   return true;
