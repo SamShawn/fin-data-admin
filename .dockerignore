@@ -1,0 +1,14 @@
+node_modules
+apps/*/node_modules
+packages/*/node_modules
+.git
+.husky
+dist
+apps/*/dist
+packages/*/dist
+apps/*/.turbo
+.turbo
+coverage
+.env
+.env.*
+*.log
