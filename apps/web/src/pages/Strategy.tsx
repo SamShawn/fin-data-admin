@@ -53,6 +53,25 @@ export default function StrategyPage() {
     fetchData();
   };
 
+  const handleDelete = (id: string, name: string) => {
+    Modal.confirm({
+      title: `确认删除策略「${name}」？`,
+      content: '删除后，关联的该策略配置及参数将无法恢复。',
+      okText: '确认删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await apiClient.delete(`/strategies/${id}`);
+          message.success('删除成功');
+          fetchData(); // 刷新表格
+        } catch {
+          // 错误已拦截
+        }
+      },
+    });
+  };
+
   const columns = [
     { title: '策略名称', dataIndex: 'name' },
     { title: '策略代码', dataIndex: 'code' },
@@ -79,15 +98,7 @@ export default function StrategyPage() {
           >
             编辑
           </Button>
-          <Button
-            type="link"
-            danger
-            onClick={async () => {
-              await apiClient.delete(`/strategies/${record.id}`);
-              message.success('删除成功');
-              fetchData();
-            }}
-          >
+          <Button type="link" danger onClick={() => handleDelete(record.id, record.name)}>
             删除
           </Button>
         </Space>

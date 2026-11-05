@@ -1,0 +1,6 @@
+[allowlist]
+paths = [
+  '''.env.example''',       # 允许占位符
+  '''docs/.*''',            # 文档中的示例
+  '''pnpm-lock.yaml''',
+]
