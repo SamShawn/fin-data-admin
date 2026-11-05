@@ -1,4 +1,4 @@
-import { Table, Button, Input, Modal, Form, Select, message } from 'antd';
+import { Table, Button, Input, Modal, Form, Select, message, Space } from 'antd';
 import { useEffect, useState } from 'react';
 
 import { apiClient } from '../../api/client';
@@ -65,6 +65,25 @@ export default function UserManage() {
     fetchUsers();
   };
 
+  const handleDelete = (id: string, username: string) => {
+    Modal.confirm({
+      title: `确认删除用户「${username}」？`,
+      content: '此操作不可撤销，删除后该用户将无法登录，请谨慎操作。',
+      okText: '确认删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await apiClient.delete(`/admin/users/${id}`);
+          message.success('用户已删除');
+          fetchUsers(); // 刷新表格
+        } catch {
+          // 错误已由 Axios 拦截器统一提示
+        }
+      },
+    });
+  };
+
   const columns = [
     { title: '用户名', dataIndex: 'username' },
     { title: '姓名', dataIndex: 'displayName' },
@@ -78,6 +97,17 @@ export default function UserManage() {
       title: '状态',
       dataIndex: 'status',
       render: (s: number) => (s === 1 ? '启用' : '禁用'),
+    },
+    {
+      title: '操作',
+      render: (_: unknown, record: UserItem) => (
+        <Space>
+          {/* 你的编辑按钮 */}
+          <Button type="link" danger onClick={() => handleDelete(record.id, record.username)}>
+            删除
+          </Button>
+        </Space>
+      ),
     },
   ];
 

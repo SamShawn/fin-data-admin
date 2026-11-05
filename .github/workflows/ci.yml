@@ -15,8 +15,18 @@ jobs:
     name: Lint & Typecheck & Test
     runs-on: ubuntu-latest
     steps:
+      # 👇 1. 必须先把代码拉下来，并且拉取完整历史
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 👇 2. 拉取代码后再执行 Gitleaks，并指定白名单配置
+      - name: Gitleaks scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
@@ -48,12 +58,6 @@ jobs:
       - name: Run frontend tests
         run: pnpm --filter @fin/web test
 
-      # 可选：运行 E2E (在 CI 中跑 E2E 需要先启动前后端服务)
-      # - name: Install Playwright Browsers
-      #   run: pnpm exec playwright install --with-deps
-      # - name: Run E2E tests
-      #   run: pnpm exec playwright test
-
   build-images:
     name: Build Docker Images
     needs: quality-check
@@ -63,7 +67,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 👇 1. 新增：将仓库名转换为全小写并存入环境变量
+      # 👇 3. 直接把全小写仓库名设置到环境变量中
       - name: Lowercase repository name
         run: |
           echo "IMAGE_REPO=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
@@ -84,7 +88,7 @@ jobs:
           context: .
           file: apps/api/Dockerfile
           push: true
-          # 👇 2. 替换为环境变量 IMAGE_REPO
+          # 👇 4. 使用全小写变量
           tags: ghcr.io/${{ env.IMAGE_REPO }}/api:latest,ghcr.io/${{ env.IMAGE_REPO }}/api:sha-${{ github.sha }}
 
       - name: Build and push Web image
@@ -93,5 +97,5 @@ jobs:
           context: .
           file: apps/web/Dockerfile
           push: true
-          # 👇 3. 替换为环境变量 IMAGE_REPO
+          # 👇 5. 使用全小写变量
           tags: ghcr.io/${{ env.IMAGE_REPO }}/web:latest,ghcr.io/${{ env.IMAGE_REPO }}/web:sha-${{ github.sha }}

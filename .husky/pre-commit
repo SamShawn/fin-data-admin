@@ -1,1 +1,4 @@
 pnpm lint-staged
+
+# 如果没有安装 gitleaks，可以通过 brew install gitleaks 安装
+gitleaks protect --staged -v || (echo "❌ 发现敏感信息，请移除后再提交" && exit 1)

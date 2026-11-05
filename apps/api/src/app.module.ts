@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 
@@ -65,6 +66,8 @@ import { RedisModule } from './redis/redis.module';
         logging: config.get<string>('DB_LOGGING') === 'true',
       }),
     }),
+
+    ScheduleModule.forRoot(),
 
     // 4. 其他模块
     RedisModule,

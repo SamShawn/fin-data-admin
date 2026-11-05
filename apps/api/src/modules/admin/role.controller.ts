@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Redis } from 'ioredis';
 import { Repository, In } from 'typeorm';
 import { z } from 'zod';
 
@@ -7,6 +8,7 @@ import { Auditable } from '../../common/decorators/auditable.decorator';
 import { RequirePermission } from '../../common/decorators/require-permission.decorator';
 import { Permission } from '../../entities/permission.entity';
 import { Role } from '../../entities/role.entity';
+import { REDIS_CLIENT } from '../../redis/redis.module';
 
 const createRoleSchema = z.object({
   code: z.string(),
@@ -20,6 +22,7 @@ export class RoleController {
   constructor(
     @InjectRepository(Role) private roleRepo: Repository<Role>,
     @InjectRepository(Permission) private permRepo: Repository<Permission>,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
 
   @Get()
@@ -60,6 +63,13 @@ export class RoleController {
 
     // 注意：权限变更后，需要清除所有在线用户的权限缓存（Redis 里之前缓存的 perm:user:*）
     // 这里留个 TODO，由于我们是每次请求实时查（或短缓存），也可在 Redis 层面处理
+
+    // 👇 关键补充：清除所有用户的权限缓存，使其立即生效
+    // 注意：需要注入 Redis 客户端
+    const keys = await this.redis.keys('perm:user:*');
+    if (keys.length > 0) {
+      await this.redis.del(...keys);
+    }
 
     return { success: true };
   }
