@@ -1,6 +1,16 @@
 [allowlist]
 paths = [
-  '''.env.example''',       # 允许占位符
-  '''docs/.*''',            # 文档中的示例
+  # 忽略示例文件和文档
+  '''.env.example''',
+  '''docs/.*''',
+  # 忽略 Docker 开发环境配置
+  '''infra/docker/docker-compose.dev.yml''',
+  # 忽略测试文件（里面有很多 admin123 这样的测试密码）
+  '''.*\.spec\.ts''',
+  '''.*\.test\.ts''',
+  '''e2e/.*''',
+  # 忽略锁文件和日志
   '''pnpm-lock.yaml''',
+  '''test-results/.*''',
+  '''playwright-report/.*''',
 ]
