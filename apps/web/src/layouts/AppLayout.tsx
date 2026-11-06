@@ -1,12 +1,13 @@
 import {
   DashboardOutlined,
   TableOutlined,
-  FundOutlined,
   SettingOutlined,
   LogoutOutlined,
   UserOutlined,
+  SearchOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
-import { Layout, Menu, theme, MenuProps, Button, message } from 'antd';
+import { Layout, Menu, theme, Dropdown, Avatar, Space, Input, message } from 'antd';
 import { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
@@ -16,25 +17,18 @@ import { useAuthStore } from '../store/auth';
 
 const { Header, Content, Sider } = Layout;
 
-// 继承 Antd 的 ItemType，彻底解决类型不兼容
-type MenuConfig = NonNullable<MenuProps['items']>[number] & {
+type MenuConfig = NonNullable<React.ComponentProps<typeof Menu>['items']>[number] & {
   permission?: string;
   children?: MenuConfig[];
 };
 
 const MENU_CONFIG: MenuConfig[] = [
-  { key: '/', icon: <DashboardOutlined />, label: '概览' },
+  { key: '/', icon: <DashboardOutlined />, label: '大盘概览' },
   {
     key: '/market-data',
     icon: <TableOutlined />,
     label: '行情数据',
     permission: 'sys:market_data:read',
-  },
-  {
-    key: '/strategies',
-    icon: <FundOutlined />,
-    label: '策略配置',
-    permission: 'biz:strategy:read',
   },
   {
     key: '/admin',
@@ -54,65 +48,77 @@ export function AppLayout() {
   const { token } = theme.useToken();
   const { hasPermission } = usePermission();
 
-  // 获取当前用户与登出方法
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
   const filterMenus = (menus: MenuConfig[]): MenuConfig[] => {
     const result: MenuConfig[] = [];
-
     for (const menu of menus) {
       if (menu.children && menu.children.length > 0) {
         const filteredChildren = filterMenus(menu.children as MenuConfig[]);
-        if (filteredChildren.length > 0) {
-          result.push({ ...menu, children: filteredChildren });
-        }
+        if (filteredChildren.length > 0) result.push({ ...menu, children: filteredChildren });
         continue;
       }
-
-      if (!menu.permission || hasPermission(menu.permission)) {
-        result.push(menu);
-      }
+      if (!menu.permission || hasPermission(menu.permission)) result.push(menu);
     }
     return result;
   };
 
   const visibleMenus = filterMenus(MENU_CONFIG);
 
-  // 处理登出逻辑
   const handleLogout = async () => {
     try {
-      // 通知后端把 Token 加入黑名单
       await apiClient.post('/auth/logout');
     } catch {
-      // 👈 直接 catch 留空，不写 (e)
-      // 即使后端请求失败，前端也要强制登出
+      // ignore
     } finally {
-      logout(); // 清除 Zustand 里的状态和 localStorage
+      logout();
       message.success('已退出登录');
       navigate('/login');
     }
   };
 
+  // 顶部右侧的用户下拉菜单
+  const userMenuItems = [
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: '退出登录',
+      danger: true,
+      onClick: handleLogout,
+    },
+  ];
+
+  // 根据当前路由获取页面标题
+  const getPageTitle = () => {
+    if (location.pathname === '/') return '大盘概览';
+    if (location.pathname.includes('/market-data')) return '行情数据';
+    if (location.pathname.includes('/admin/users')) return '用户管理';
+    if (location.pathname.includes('/admin/roles')) return '角色管理';
+    if (location.pathname.includes('/audit-logs')) return '审计日志';
+    return '';
+  };
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible theme="light">
+      {/* 深色侧边栏 */}
+      <Sider collapsible theme="dark" width={220}>
         <div
           style={{
-            height: 32,
-            margin: 16,
-            background: 'rgba(0,0,0,0.1)',
-            borderRadius: 6,
+            height: 56,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            color: '#fff',
+            fontSize: 18,
             fontWeight: 'bold',
+            letterSpacing: 1,
           }}
         >
           Fin Data
         </div>
         <Menu
-          theme="light"
+          theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
           items={visibleMenus}
@@ -134,35 +140,47 @@ export function AppLayout() {
           }}
         />
       </Sider>
+
       <Layout>
+        {/* 顶部导航栏 */}
         <Header
           style={{
-            padding: '0 24px',
             background: token.colorBgContainer,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: 16,
+            justifyContent: 'space-between',
+            borderBottom: '1px solid #e2e8f0',
           }}
         >
-          {/* 显示当前用户 */}
-          <span style={{ fontSize: 14, color: '#666' }}>
-            <UserOutlined style={{ marginRight: 4 }} />
-            {user?.displayName || user?.username || 'Admin'}
-          </span>
-          {/* 退出登录按钮 */}
-          <Button type="text" danger icon={<LogoutOutlined />} onClick={handleLogout}>
-            退出登录
-          </Button>
+          {/* 左侧：页面标题 */}
+          <div style={{ fontSize: 16, fontWeight: 500, color: '#1f2937' }}>{getPageTitle()}</div>
+
+          {/* 右侧：工具与用户信息 */}
+          <Space size="large">
+            <Input
+              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+              placeholder="搜索股票代码..."
+              style={{ width: 200, borderRadius: 20, backgroundColor: '#f4f7f9' }}
+              variant="borderless"
+            />
+            <BellOutlined style={{ fontSize: 18, color: '#64748b', cursor: 'pointer' }} />
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar
+                  size="small"
+                  icon={<UserOutlined />}
+                  style={{ backgroundColor: '#1677ff' }}
+                />
+                <span style={{ color: '#334155', fontWeight: 500 }}>
+                  {user?.displayName || user?.username || 'Admin'}
+                </span>
+              </Space>
+            </Dropdown>
+          </Space>
         </Header>
-        <Content
-          style={{
-            margin: 16,
-            padding: 24,
-            background: token.colorBgContainer,
-            borderRadius: token.borderRadius,
-          }}
-        >
+
+        {/* 内容区 */}
+        <Content style={{ margin: 24 }}>
           <Suspense fallback={<div>Loading...</div>}>
             <Outlet />
           </Suspense>
