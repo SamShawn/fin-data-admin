@@ -34,10 +34,17 @@ export default function LoginPage() {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        background: '#f0f2f5',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
       }}
     >
-      <Card title="Fin Data Admin 登录" style={{ width: 400 }}>
+      <Card
+        title={<div style={{ textAlign: 'center', fontSize: 20 }}>Fin Data Admin</div>}
+        style={{
+          width: 400,
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)', // 👈 加强阴影
+          border: 'none',
+        }}
+      >
         <Form onFinish={onFinish} size="large">
           <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
             <Input prefix={<UserOutlined />} placeholder="用户名 (admin)" />

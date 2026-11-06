@@ -7,7 +7,7 @@ import {
   SearchOutlined,
   BellOutlined,
 } from '@ant-design/icons';
-import { Layout, Menu, theme, Dropdown, Avatar, Space, Input, message } from 'antd';
+import { Layout, Menu, theme, Dropdown, Avatar, Space, Input, Breadcrumb, message } from 'antd';
 import { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
@@ -89,14 +89,22 @@ export function AppLayout() {
     },
   ];
 
-  // 根据当前路由获取页面标题
-  const getPageTitle = () => {
-    if (location.pathname === '/') return '大盘概览';
-    if (location.pathname.includes('/market-data')) return '行情数据';
-    if (location.pathname.includes('/admin/users')) return '用户管理';
-    if (location.pathname.includes('/admin/roles')) return '角色管理';
-    if (location.pathname.includes('/audit-logs')) return '审计日志';
-    return '';
+  // 把 getPageTitle 替换为动态面包屑生成逻辑
+  const getBreadcrumbItems = () => {
+    const pathSnippets = location.pathname.split('/').filter((i) => i);
+    const items = [{ title: '首页' }];
+
+    if (pathSnippets.length > 0) {
+      if (pathSnippets[0] === 'market-data') items.push({ title: '行情数据' });
+      if (pathSnippets[0] === 'admin') {
+        items.push({ title: '系统管理' });
+        if (pathSnippets[1] === 'users') items.push({ title: '用户管理' });
+        if (pathSnippets[1] === 'roles') items.push({ title: '角色管理' });
+      }
+      if (pathSnippets[0] === 'audit-logs') items.push({ title: '审计日志' });
+      if (pathSnippets[0] === 'strategies') items.push({ title: '策略配置' });
+    }
+    return items;
   };
 
   return (
@@ -152,8 +160,8 @@ export function AppLayout() {
             borderBottom: '1px solid #e2e8f0',
           }}
         >
-          {/* 左侧：页面标题 */}
-          <div style={{ fontSize: 16, fontWeight: 500, color: '#1f2937' }}>{getPageTitle()}</div>
+          {/* 左侧：面包屑 */}
+          <Breadcrumb items={getBreadcrumbItems()} style={{ fontWeight: 500 }} />
 
           {/* 右侧：工具与用户信息 */}
           <Space size="large">
@@ -180,7 +188,17 @@ export function AppLayout() {
         </Header>
 
         {/* 内容区 */}
-        <Content style={{ margin: 24 }}>
+        <Content
+          style={{
+            margin: 24,
+            padding: 24,
+            background: token.colorBgContainer,
+            borderRadius: token.borderRadius,
+            boxShadow: token.boxShadow,
+            minHeight: 280,
+            overflow: 'auto',
+          }}
+        >
           <Suspense fallback={<div>Loading...</div>}>
             <Outlet />
           </Suspense>
