@@ -61,24 +61,32 @@ export class MarketDataService {
   }
 
   private parseSort(sort?: string): SortKey[] {
+    // 映射表：前端传的驼峰或下划线 -> 数据库真实列名
     const mapping: Record<string, string> = {
       tradeDate: 'trade_date',
+      trade_date: 'trade_date', // 👈 兼容下划线格式
       stockCode: 'stock_code',
+      stock_code: 'stock_code', // 👈 兼容下划线格式
       close: 'close',
       pctChange: 'pct_change',
+      pct_change: 'pct_change', // 👈 兼容下划线格式
       volume: 'volume',
     };
 
-    if (!sort)
+    // 默认排序
+    if (!sort) {
       return [
         { column: 'trade_date', order: 'DESC' },
         { column: 'stock_code', order: 'ASC' },
       ];
+    }
 
     const keys = sort.split(',').map((s) => {
       const [col, order] = s.split(':');
       const dbCol = mapping[col];
-      if (!dbCol) throw new Error(`不支持的排序字段: ${col}`);
+      if (!dbCol) {
+        throw new Error(`不支持的排序字段: ${col}`);
+      }
       return {
         column: dbCol,
         order: (order?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC',
@@ -131,5 +139,20 @@ export class MarketDataService {
     await this.redis.set(cacheKey, JSON.stringify(result), 'EX', 300);
 
     return result;
+  }
+
+  // 新增：获取指定股票的历史 K 线数据（默认最近 100 个交易日）
+  async getKlineData(stockCode: string, limit: number = 100) {
+    const qb = this.quoteRepo
+      .createQueryBuilder('q')
+      .innerJoin('stocks', 's', 's.stock_code = q.stock_code')
+      .select(['q.trade_date', 'q.open', 'q.high', 'q.low', 'q.close', 'q.volume', 'q.amount'])
+      .where('q.stock_code = :stockCode', { stockCode })
+      .orderBy('q.trade_date', 'DESC')
+      .limit(limit);
+
+    const rows = await qb.getRawMany();
+    // 因为按日期倒序查的，返回给前端画图前需要正序排列
+    return rows.reverse();
   }
 }

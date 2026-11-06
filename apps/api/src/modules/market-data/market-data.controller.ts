@@ -18,6 +18,14 @@ export class MarketDataController {
     return this.service.paginate(parsed, req.user?.userId || 'anonymous');
   }
 
+  @Get('kline')
+  @RequirePermission('sys:market_data:read')
+  async getKline(@Query('stockCode') stockCode: string) {
+    if (!stockCode) throw new Error('stockCode 不能为空');
+    const items = await this.service.getKlineData(stockCode);
+    return { items };
+  }
+
   @Get('export')
   @RequirePermission('sys:market_data:export')
   async exportCsv(@Query() query: unknown, @Res() res: Response) {

@@ -18,11 +18,13 @@ import { DailyQuote } from './entities/daily-quote.entity';
 import { Permission } from './entities/permission.entity';
 import { Role } from './entities/role.entity';
 import { Strategy } from './entities/strategy.entity';
+import { UserFavorite } from './entities/user-favorite.entity';
 import { User } from './entities/user.entity';
 import { HealthModule } from './health/health.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { FavoriteModule } from './modules/favorite/favorite.module';
 import { MarketDataModule } from './modules/market-data/market-data.module';
 import { StrategyModule } from './modules/strategy/strategy.module';
 import { RedisModule } from './redis/redis.module';
@@ -61,7 +63,7 @@ import { RedisModule } from './redis/redis.module';
         password: config.get<string>('DB_PASSWORD', 'fin_dev'),
         database: config.get<string>('DB_NAME', 'fin_data'),
         // 注册实体
-        entities: [User, Role, Permission, AuditLog, DailyQuote, Strategy],
+        entities: [User, Role, Permission, AuditLog, DailyQuote, Strategy, UserFavorite],
         synchronize: false, // 绝对不要开启，所有表结构通过 SQL 迁移控制
         logging: config.get<string>('DB_LOGGING') === 'true',
       }),
@@ -77,6 +79,7 @@ import { RedisModule } from './redis/redis.module';
     AdminModule,
     MarketDataModule,
     StrategyModule,
+    FavoriteModule,
   ],
   controllers: [AppController],
   providers: [
