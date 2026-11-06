@@ -61,24 +61,32 @@ export class MarketDataService {
   }
 
   private parseSort(sort?: string): SortKey[] {
+    // 映射表：前端传的驼峰或下划线 -> 数据库真实列名
     const mapping: Record<string, string> = {
       tradeDate: 'trade_date',
+      trade_date: 'trade_date', // 👈 兼容下划线格式
       stockCode: 'stock_code',
+      stock_code: 'stock_code', // 👈 兼容下划线格式
       close: 'close',
       pctChange: 'pct_change',
+      pct_change: 'pct_change', // 👈 兼容下划线格式
       volume: 'volume',
     };
 
-    if (!sort)
+    // 默认排序
+    if (!sort) {
       return [
         { column: 'trade_date', order: 'DESC' },
         { column: 'stock_code', order: 'ASC' },
       ];
+    }
 
     const keys = sort.split(',').map((s) => {
       const [col, order] = s.split(':');
       const dbCol = mapping[col];
-      if (!dbCol) throw new Error(`不支持的排序字段: ${col}`);
+      if (!dbCol) {
+        throw new Error(`不支持的排序字段: ${col}`);
+      }
       return {
         column: dbCol,
         order: (order?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC',
