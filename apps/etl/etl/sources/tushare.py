@@ -79,10 +79,7 @@ class TushareSource(BaseSource):
             logger.error("查询上次同步日期失败", error=str(e))
             return None
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=2, min=2, max=30),
-    )
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=2, min=2, max=30))
     def _fetch_daily_basic(self, trade_date: str):
         time.sleep(0.3)
         return self.pro.daily_basic(trade_date=trade_date.replace('-', ''))
@@ -96,3 +93,11 @@ class TushareSource(BaseSource):
         except Exception as e:
             logger.error("拉取基本面数据失败", error=str(e))
             return pd.DataFrame()
+
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=2))
+    def fetch_stock_basic(self):
+        logger.info("开始拉取股票基础信息")
+        # Tushare 的 stock_basic 接口获取 A 股列表
+        df = self.pro.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+        logger.info("股票基础信息拉取完成", rows=len(df))
+        return df

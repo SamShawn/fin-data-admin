@@ -1,4 +1,3 @@
-import sys
 import time
 import schedule
 from datetime import datetime, timedelta
@@ -10,11 +9,17 @@ from .sources.tushare import TushareSource
 from .transformers.market_data import transform_daily_quotes
 from .validators.engine import ValidatorEngine
 from .loaders.rejected import save_rejected
-from .loaders.market_data import upsert_daily_quotes, ensure_partitions
+from .loaders.market_data import upsert_stocks, upsert_daily_quotes, ensure_partitions
 from .logger import setup_logging
 
 setup_logging()
 logger = structlog.get_logger()
+
+def sync_stock_basic():
+    source = TushareSource()
+    df = source.fetch_stock_basic()
+    if not df.empty:
+        upsert_stocks(df)
 
 def sync_daily_quotes(target_date: str | None = None):
     """核心同步逻辑：拉取 -> 清洗 -> 校验 -> 入库"""
@@ -119,11 +124,15 @@ def run_scheduler():
 
 
 if __name__ == "__main__":
-    # 如果传了参数，则视为手动补数
-    if len(sys.argv) > 1:
+    import sys
+
+    # 支持 python -m etl.main sync_stocks 专门拉取名称
+    if len(sys.argv) > 1 and sys.argv[1] == "sync_stocks":
+        logger.info("进入股票基础信息同步模式")
+        sync_stock_basic()
+    elif len(sys.argv) > 1:
         target = sys.argv[1]
         logger.info("进入手动补数模式", date=target)
         sync_daily_quotes(target)
     else:
-        # 没传参数，启动常驻调度器
         run_scheduler()
