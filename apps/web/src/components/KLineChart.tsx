@@ -1,7 +1,7 @@
 import ReactECharts from 'echarts-for-react';
 import { useMemo } from 'react';
 
-import { formatNumber } from '../utils/format';
+import { formatNumber, formatDate } from '../utils/format';
 
 export interface KLineData {
   trade_date: string;
@@ -25,7 +25,7 @@ interface TooltipParam {
 
 export function KLineChart({ data, stockName }: KLineChartProps) {
   const option = useMemo(() => {
-    const dates = data.map((item) => item.trade_date);
+    const dates = data.map((item) => formatDate(item.trade_date));
 
     // 👇 强制转为 Number，防止字符串拼接导致计算错误
     const values = data.map((item) => [
@@ -104,7 +104,7 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
 
           return `
             <div style="font-family: 'Inter', sans-serif; font-size: 12px;">
-              <div style="color: #a1a1aa; margin-bottom: 8px; font-weight: bold;">${item.trade_date}</div>
+              <div style="color: #a1a1aa; margin-bottom: 8px; font-weight: bold;">${formatDate(item.trade_date)}</div>
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 2px 12px 2px 0; color: #a1a1aa;">开盘</td>

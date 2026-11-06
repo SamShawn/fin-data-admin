@@ -26,7 +26,7 @@ import { apiClient } from '../api/client';
 import { KLineChart, KLineData } from '../components/KLineChart';
 import { VirtualTable } from '../components/VirtualTable';
 import { useMarketData, MarketDataItem, Filters, downloadCsv } from '../hooks/useMarketData';
-import { formatNumber, formatPercent, getChangeColor } from '../utils/format';
+import { formatNumber, formatPercent, getChangeColor, formatDate } from '../utils/format';
 
 type DataColumn = ColumnDef<MarketDataItem, unknown> & { accessorKey: string };
 
@@ -124,7 +124,9 @@ export default function MarketDataPage() {
         accessorKey: 'trade_date',
         header: '日期',
         enableSorting: true,
-        cell: ({ getValue }) => <span style={{ color: '#a1a1aa' }}>{getValue() as string}</span>,
+        cell: ({ getValue }) => (
+          <span style={{ color: '#a1a1aa' }}>{formatDate(getValue() as string)}</span>
+        ),
       },
       {
         accessorKey: 'open',
