@@ -3,11 +3,11 @@ import {
   TableOutlined,
   SettingOutlined,
   LogoutOutlined,
-  UserOutlined,
   SearchOutlined,
   BellOutlined,
+  MacCommandFilled,
 } from '@ant-design/icons';
-import { Layout, Menu, theme, Dropdown, Avatar, Space, Input, Breadcrumb, message } from 'antd';
+import { Layout, Menu, Dropdown, Avatar, Space, Input, Breadcrumb, message } from 'antd';
 import { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
@@ -15,7 +15,7 @@ import { apiClient } from '../api/client';
 import { usePermission } from '../hooks/usePermission';
 import { useAuthStore } from '../store/auth';
 
-const { Header, Content, Sider } = Layout;
+const { Content } = Layout;
 
 type MenuConfig = NonNullable<React.ComponentProps<typeof Menu>['items']>[number] & {
   permission?: string;
@@ -45,7 +45,6 @@ const MENU_CONFIG: MenuConfig[] = [
 export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { token } = theme.useToken();
   const { hasPermission } = usePermission();
 
   const user = useAuthStore((state) => state.user);
@@ -64,8 +63,6 @@ export function AppLayout() {
     return result;
   };
 
-  const visibleMenus = filterMenus(MENU_CONFIG);
-
   const handleLogout = async () => {
     try {
       await apiClient.post('/auth/logout');
@@ -73,23 +70,12 @@ export function AppLayout() {
       // ignore
     } finally {
       logout();
-      message.success('已退出登录');
+      message.success('已退出');
       navigate('/login');
     }
   };
 
-  // 顶部右侧的用户下拉菜单
-  const userMenuItems = [
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: '退出登录',
-      danger: true,
-      onClick: handleLogout,
-    },
-  ];
-
-  // 把 getPageTitle 替换为动态面包屑生成逻辑
+  // 极简面包屑
   const getBreadcrumbItems = () => {
     const pathSnippets = location.pathname.split('/').filter((i) => i);
     const items = [{ title: '首页' }];
@@ -108,98 +94,143 @@ export function AppLayout() {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      {/* 深色侧边栏 */}
-      <Sider collapsible theme="dark" width={220}>
+    <Layout style={{ minHeight: '100vh', background: '#08080a' }}>
+      {/* 💡 悬浮胶囊侧边栏 (Margin 让出呼吸空间) */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 20,
+          left: 20,
+          bottom: 20,
+          width: 240,
+          background: '#141418', // L2 卡片层材质
+          borderRadius: 16,
+          border: '1px solid rgba(255, 255, 255, 0.05)', // 物理高光边
+          boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          zIndex: 100,
+        }}
+      >
+        {/* 品牌 Logo */}
         <div
           style={{
-            height: 56,
+            height: 80,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontSize: 18,
-            fontWeight: 'bold',
+            paddingLeft: 24,
+            color: '#ededed',
+            fontSize: 16,
+            fontWeight: 700,
             letterSpacing: 1,
           }}
         >
-          Fin Data
+          <div
+            style={{
+              width: 24,
+              height: 24,
+              background: 'linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%)',
+              borderRadius: 8,
+              marginRight: 12,
+              boxShadow: '0 0 16px rgba(124, 58, 237, 0.4)', // 霓虹发光
+            }}
+          />
+          NEBULA FIN
         </div>
+
         <Menu
           theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
-          items={visibleMenus}
-          onClick={({ key }) => {
-            const findMenu = (menus: MenuConfig[], targetKey: string): MenuConfig | undefined => {
-              for (const m of menus) {
-                if (m.key === targetKey) return m;
-                if (m.children) {
-                  const found = findMenu(m.children as MenuConfig[], targetKey);
-                  if (found) return found;
-                }
-              }
-              return undefined;
-            };
-            const current = findMenu(MENU_CONFIG, key);
-            if (current && (!current.children || current.children.length === 0)) {
-              navigate(key);
-            }
-          }}
+          items={filterMenus(MENU_CONFIG)}
+          onClick={({ key }) => navigate(key)}
+          style={{ background: 'transparent', borderRight: 'none', flex: 1, padding: '12px 16px' }}
         />
-      </Sider>
+      </div>
 
-      <Layout>
-        {/* 顶部导航栏 */}
-        <Header
+      {/* 右侧主区域 */}
+      <Layout style={{ marginLeft: 280, background: 'transparent' }}>
+        {/* 💡 极简磨砂 Header */}
+        <div
           style={{
-            background: token.colorBgContainer,
+            height: 80,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: '1px solid #e2e8f0',
+            padding: '0 24px 0 8px', // 左对齐与内容区保持一致
+            position: 'sticky',
+            top: 0,
+            zIndex: 99,
+            background: 'rgba(8, 8, 10, 0.6)', // 纯黑半透明
+            backdropFilter: 'blur(20px)', // 毛玻璃
+            WebkitBackdropFilter: 'blur(20px)',
           }}
         >
-          {/* 左侧：面包屑 */}
-          <Breadcrumb items={getBreadcrumbItems()} style={{ fontWeight: 500 }} />
+          <Breadcrumb items={getBreadcrumbItems()} style={{ fontSize: 13, color: '#71717a' }} />
 
-          {/* 右侧：工具与用户信息 */}
-          <Space size="large">
+          <Space size={20}>
+            {/* 带有 ⌘K 快捷键提示的搜索框 */}
             <Input
-              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-              placeholder="搜索股票代码..."
-              style={{ width: 200, borderRadius: 20, backgroundColor: '#f4f7f9' }}
+              prefix={<SearchOutlined style={{ color: '#52525b' }} />}
+              suffix={
+                <span
+                  style={{
+                    color: '#52525b',
+                    fontSize: 12,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <MacCommandFilled /> K
+                </span>
+              }
+              placeholder="Search ticker or company..."
+              style={{
+                width: 280,
+                borderRadius: 8,
+                backgroundColor: '#141418',
+                border: '1px solid rgba(255,255,255,0.05)',
+                color: '#ededed',
+              }}
               variant="borderless"
             />
-            <BellOutlined style={{ fontSize: 18, color: '#64748b', cursor: 'pointer' }} />
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <Space style={{ cursor: 'pointer' }}>
-                <Avatar
-                  size="small"
-                  icon={<UserOutlined />}
-                  style={{ backgroundColor: '#1677ff' }}
-                />
-                <span style={{ color: '#334155', fontWeight: 500 }}>
-                  {user?.displayName || user?.username || 'Admin'}
-                </span>
-              </Space>
+            <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)' }} />
+            <BellOutlined style={{ fontSize: 18, color: '#71717a', cursor: 'pointer' }} />
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'logout',
+                    icon: <LogoutOutlined />,
+                    label: '退出',
+                    danger: true,
+                    onClick: handleLogout,
+                  },
+                ],
+              }}
+            >
+              <Avatar
+                size={32}
+                style={{
+                  background: '#141418',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#ededed',
+                  cursor: 'pointer',
+                }}
+              >
+                {user?.username?.charAt(0).toUpperCase() || 'U'}
+              </Avatar>
             </Dropdown>
           </Space>
-        </Header>
+        </div>
 
         {/* 内容区 */}
-        <Content
-          style={{
-            margin: 24,
-            padding: 24,
-            background: token.colorBgContainer,
-            borderRadius: token.borderRadius,
-            boxShadow: token.boxShadow,
-            minHeight: 280,
-            overflow: 'auto',
-          }}
-        >
-          <Suspense fallback={<div>Loading...</div>}>
+        <Content style={{ padding: '16px 24px 24px 8px', minHeight: 'calc(100vh - 80px)' }}>
+          <Suspense
+            fallback={<div style={{ color: '#52525b', padding: 24 }}>Loading modules...</div>}
+          >
             <Outlet />
           </Suspense>
         </Content>
