@@ -1,4 +1,3 @@
-import { CaretUpOutlined, CaretDownOutlined } from '@ant-design/icons';
 import {
   useReactTable,
   getCoreRowModel,
@@ -65,18 +64,28 @@ export function VirtualTable<T>({
     <div
       ref={parentRef}
       onScroll={onScroll}
-      style={{ height: '70vh', overflow: 'auto', border: '1px solid #f0f0f0', borderRadius: 8 }}
+      style={{
+        height: '100%', // 👈 填满父容器（父容器已经限制了高度）
+        overflow: 'auto',
+        border: 'none', // 👈 去除边框
+        borderRadius: 0, // 👈 去除圆角，完全贴合父面板
+        backgroundColor: 'transparent', // 继承深色背景
+      }}
     >
-      {/* 表头 (固定在顶部) */}
+      {/* 表头 */}
       <div
         style={{
           display: 'flex',
           position: 'sticky',
           top: 0,
-          background: '#fafafa',
+          background: '#141418', // 与面板融为一体的颜色
           zIndex: 10,
-          borderBottom: '1px solid #f0f0f0',
-          fontWeight: 'bold',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.04)', // 极弱的金属线
+          fontWeight: 600,
+          fontSize: 11,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          color: '#71717a', // 次级文字颜色
         }}
       >
         {table.getHeaderGroups()[0].headers.map((header) => (
@@ -84,9 +93,9 @@ export function VirtualTable<T>({
             key={header.id}
             onClick={header.column.getToggleSortingHandler()}
             style={{
-              flex: 1,
-              padding: '10px 16px',
-              minWidth: 100,
+              flex: header.column.columnDef.size ? `0 0 ${header.column.columnDef.size}px` : 1,
+              padding: '12px 16px',
+              minWidth: 80,
               cursor: header.column.getCanSort() ? 'pointer' : 'default',
               display: 'flex',
               alignItems: 'center',
@@ -94,19 +103,25 @@ export function VirtualTable<T>({
               userSelect: 'none',
             }}
           >
-            {flexRender(header.column.columnDef.header, header.getContext())}
-            {/* 排序图标 */}
+            {/* 渲染表头内容，数字列右对齐 */}
+            <div
+              style={{
+                flex: 1,
+                textAlign: ['open', 'close', 'volume', 'pct_change'].includes(header.column.id)
+                  ? 'right'
+                  : 'left',
+              }}
+            >
+              {flexRender(header.column.columnDef.header, header.getContext())}
+            </div>
+
+            {/* 排序图标（极简风格） */}
             {header.column.getCanSort() && (
-              <span style={{ fontSize: 10, color: '#bfbfbf' }}>
+              <span style={{ fontSize: 10, color: '#52525b' }}>
                 {{
-                  asc: <CaretUpOutlined style={{ color: '#1677ff' }} />,
-                  desc: <CaretDownOutlined style={{ color: '#1677ff' }} />,
-                }[header.column.getIsSorted() as string] ?? (
-                  <span style={{ display: 'flex', flexDirection: 'column' }}>
-                    <CaretUpOutlined />
-                    <CaretDownOutlined style={{ marginTop: -6 }} />
-                  </span>
-                )}
+                  asc: <span style={{ color: '#7c3aed' }}>▲</span>,
+                  desc: <span style={{ color: '#7c3aed' }}>▼</span>,
+                }[header.column.getIsSorted() as string] ?? null}
               </span>
             )}
           </div>
@@ -128,21 +143,40 @@ export function VirtualTable<T>({
                 transform: `translateY(${virtualRow.start}px)`,
                 height: virtualRow.size,
                 width: '100%',
-                borderBottom: '1px solid #f5f5f5',
+                // 去掉生硬的实线，改用几乎隐形的暗色线
+                borderBottom: '1px solid rgba(255, 255, 255, 0.02)',
                 alignItems: 'center',
-                background: virtualRow.index % 2 === 0 ? '#fff' : '#fafafa',
+                // 放弃斑马纹，统一使用与面板融为一体的深灰色（因为表格父级已经是 #141418，这里设为透明或极深）
+                background: 'transparent',
+                // 添加悬浮交互：当鼠标划过时，泛起极弱的白/紫光
+                transition: 'background-color 0.2s',
+                cursor: 'pointer',
+              }}
+              // 使用 onMouseEnter/Leave 动态处理悬浮背景
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
               {row.getVisibleCells().map((cell) => (
                 <div
                   key={cell.id}
                   style={{
-                    flex: 1,
+                    flex: cell.column.columnDef.size ? `0 0 ${cell.column.columnDef.size}px` : 1,
                     padding: '0 16px',
-                    minWidth: 100,
+                    minWidth: 80,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
+                    // 数据列右对齐
+                    textAlign: ['open', 'close', 'volume', 'pct_change'].includes(cell.column.id)
+                      ? 'right'
+                      : 'left',
+                    // 确保文字颜色是亮灰色，不要太刺眼
+                    color: '#ededed',
+                    fontSize: 13,
                   }}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -1,12 +1,13 @@
 import {
   DashboardOutlined,
   TableOutlined,
-  FundOutlined,
   SettingOutlined,
   LogoutOutlined,
-  UserOutlined,
+  SearchOutlined,
+  BellOutlined,
+  MacCommandFilled,
 } from '@ant-design/icons';
-import { Layout, Menu, theme, MenuProps, Button, message } from 'antd';
+import { Layout, Menu, Dropdown, Avatar, Space, Input, Breadcrumb, message } from 'antd';
 import { Suspense } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
@@ -14,27 +15,20 @@ import { apiClient } from '../api/client';
 import { usePermission } from '../hooks/usePermission';
 import { useAuthStore } from '../store/auth';
 
-const { Header, Content, Sider } = Layout;
+const { Content } = Layout;
 
-// 继承 Antd 的 ItemType，彻底解决类型不兼容
-type MenuConfig = NonNullable<MenuProps['items']>[number] & {
+type MenuConfig = NonNullable<React.ComponentProps<typeof Menu>['items']>[number] & {
   permission?: string;
   children?: MenuConfig[];
 };
 
 const MENU_CONFIG: MenuConfig[] = [
-  { key: '/', icon: <DashboardOutlined />, label: '概览' },
+  { key: '/', icon: <DashboardOutlined />, label: '大盘概览' },
   {
     key: '/market-data',
     icon: <TableOutlined />,
     label: '行情数据',
     permission: 'sys:market_data:read',
-  },
-  {
-    key: '/strategies',
-    icon: <FundOutlined />,
-    label: '策略配置',
-    permission: 'biz:strategy:read',
   },
   {
     key: '/admin',
@@ -51,119 +45,192 @@ const MENU_CONFIG: MenuConfig[] = [
 export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { token } = theme.useToken();
   const { hasPermission } = usePermission();
 
-  // 获取当前用户与登出方法
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
   const filterMenus = (menus: MenuConfig[]): MenuConfig[] => {
     const result: MenuConfig[] = [];
-
     for (const menu of menus) {
       if (menu.children && menu.children.length > 0) {
         const filteredChildren = filterMenus(menu.children as MenuConfig[]);
-        if (filteredChildren.length > 0) {
-          result.push({ ...menu, children: filteredChildren });
-        }
+        if (filteredChildren.length > 0) result.push({ ...menu, children: filteredChildren });
         continue;
       }
-
-      if (!menu.permission || hasPermission(menu.permission)) {
-        result.push(menu);
-      }
+      if (!menu.permission || hasPermission(menu.permission)) result.push(menu);
     }
     return result;
   };
 
-  const visibleMenus = filterMenus(MENU_CONFIG);
-
-  // 处理登出逻辑
   const handleLogout = async () => {
     try {
-      // 通知后端把 Token 加入黑名单
       await apiClient.post('/auth/logout');
     } catch {
-      // 👈 直接 catch 留空，不写 (e)
-      // 即使后端请求失败，前端也要强制登出
+      // ignore
     } finally {
-      logout(); // 清除 Zustand 里的状态和 localStorage
-      message.success('已退出登录');
+      logout();
+      message.success('已退出');
       navigate('/login');
     }
   };
 
+  // 极简面包屑
+  const getBreadcrumbItems = () => {
+    const pathSnippets = location.pathname.split('/').filter((i) => i);
+    const items = [{ title: '首页' }];
+
+    if (pathSnippets.length > 0) {
+      if (pathSnippets[0] === 'market-data') items.push({ title: '行情数据' });
+      if (pathSnippets[0] === 'admin') {
+        items.push({ title: '系统管理' });
+        if (pathSnippets[1] === 'users') items.push({ title: '用户管理' });
+        if (pathSnippets[1] === 'roles') items.push({ title: '角色管理' });
+      }
+      if (pathSnippets[0] === 'audit-logs') items.push({ title: '审计日志' });
+      if (pathSnippets[0] === 'strategies') items.push({ title: '策略配置' });
+    }
+    return items;
+  };
+
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible theme="light">
+    <Layout style={{ minHeight: '100vh', background: '#08080a' }}>
+      {/* 💡 悬浮胶囊侧边栏 (Margin 让出呼吸空间) */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 20,
+          left: 20,
+          bottom: 20,
+          width: 240,
+          background: '#141418', // L2 卡片层材质
+          borderRadius: 16,
+          border: '1px solid rgba(255, 255, 255, 0.05)', // 物理高光边
+          boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          zIndex: 100,
+        }}
+      >
+        {/* 品牌 Logo */}
         <div
           style={{
-            height: 32,
-            margin: 16,
-            background: 'rgba(0,0,0,0.1)',
-            borderRadius: 6,
+            height: 80,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold',
+            paddingLeft: 24,
+            color: '#ededed',
+            fontSize: 16,
+            fontWeight: 700,
+            letterSpacing: 1,
           }}
         >
-          Fin Data
+          <div
+            style={{
+              width: 24,
+              height: 24,
+              background: 'linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%)',
+              borderRadius: 8,
+              marginRight: 12,
+              boxShadow: '0 0 16px rgba(124, 58, 237, 0.4)', // 霓虹发光
+            }}
+          />
+          NEBULA FIN
         </div>
+
         <Menu
-          theme="light"
+          theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
-          items={visibleMenus}
-          onClick={({ key }) => {
-            const findMenu = (menus: MenuConfig[], targetKey: string): MenuConfig | undefined => {
-              for (const m of menus) {
-                if (m.key === targetKey) return m;
-                if (m.children) {
-                  const found = findMenu(m.children as MenuConfig[], targetKey);
-                  if (found) return found;
-                }
-              }
-              return undefined;
-            };
-            const current = findMenu(MENU_CONFIG, key);
-            if (current && (!current.children || current.children.length === 0)) {
-              navigate(key);
-            }
-          }}
+          items={filterMenus(MENU_CONFIG)}
+          onClick={({ key }) => navigate(key)}
+          style={{ background: 'transparent', borderRight: 'none', flex: 1, padding: '12px 16px' }}
         />
-      </Sider>
-      <Layout>
-        <Header
+      </div>
+
+      {/* 右侧主区域 */}
+      <Layout style={{ marginLeft: 280, background: 'transparent' }}>
+        {/* 💡 极简磨砂 Header */}
+        <div
           style={{
-            padding: '0 24px',
-            background: token.colorBgContainer,
+            height: 80,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: 16,
+            justifyContent: 'space-between',
+            padding: '0 24px 0 8px', // 左对齐与内容区保持一致
+            position: 'sticky',
+            top: 0,
+            zIndex: 99,
+            background: 'rgba(8, 8, 10, 0.6)', // 纯黑半透明
+            backdropFilter: 'blur(20px)', // 毛玻璃
+            WebkitBackdropFilter: 'blur(20px)',
           }}
         >
-          {/* 显示当前用户 */}
-          <span style={{ fontSize: 14, color: '#666' }}>
-            <UserOutlined style={{ marginRight: 4 }} />
-            {user?.displayName || user?.username || 'Admin'}
-          </span>
-          {/* 退出登录按钮 */}
-          <Button type="text" danger icon={<LogoutOutlined />} onClick={handleLogout}>
-            退出登录
-          </Button>
-        </Header>
-        <Content
-          style={{
-            margin: 16,
-            padding: 24,
-            background: token.colorBgContainer,
-            borderRadius: token.borderRadius,
-          }}
-        >
-          <Suspense fallback={<div>Loading...</div>}>
+          <Breadcrumb items={getBreadcrumbItems()} style={{ fontSize: 13, color: '#71717a' }} />
+
+          <Space size={20}>
+            {/* 带有 ⌘K 快捷键提示的搜索框 */}
+            <Input
+              prefix={<SearchOutlined style={{ color: '#52525b' }} />}
+              suffix={
+                <span
+                  style={{
+                    color: '#52525b',
+                    fontSize: 12,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <MacCommandFilled /> K
+                </span>
+              }
+              placeholder="Search ticker or company..."
+              style={{
+                width: 280,
+                borderRadius: 8,
+                backgroundColor: '#141418',
+                border: '1px solid rgba(255,255,255,0.05)',
+                color: '#ededed',
+              }}
+              variant="borderless"
+            />
+            <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)' }} />
+            <BellOutlined style={{ fontSize: 18, color: '#71717a', cursor: 'pointer' }} />
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'logout',
+                    icon: <LogoutOutlined />,
+                    label: '退出',
+                    danger: true,
+                    onClick: handleLogout,
+                  },
+                ],
+              }}
+            >
+              <Avatar
+                size={32}
+                style={{
+                  background: '#141418',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#ededed',
+                  cursor: 'pointer',
+                }}
+              >
+                {user?.username?.charAt(0).toUpperCase() || 'U'}
+              </Avatar>
+            </Dropdown>
+          </Space>
+        </div>
+
+        {/* 内容区 */}
+        <Content style={{ padding: '16px 24px 24px 8px', minHeight: 'calc(100vh - 80px)' }}>
+          <Suspense
+            fallback={<div style={{ color: '#52525b', padding: 24 }}>Loading modules...</div>}
+          >
             <Outlet />
           </Suspense>
         </Content>

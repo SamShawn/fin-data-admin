@@ -1,0 +1,111 @@
+/* apps/web/src/index.css */
+
+body {
+  -webkit-font-smoothing: antialiased;
+  background-color: #08080a;
+  color: #ededed;
+  margin: 0;
+}
+
+/* 1. 工业级数据：数字等宽与右对齐 */
+.ant-table-cell {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em; /* 数字紧凑，更专业 */
+}
+
+/* 2. 无边框透气表格 */
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important; /* 极弱的横线 */
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #71717a !important;
+  padding-top: 8px;
+  padding-bottom: 12px;
+}
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  border-bottom: none !important; /* 完全去掉行横线 */
+  padding: 10px 16px;
+}
+/* 鼠标悬浮行时的极简发光 */
+.ant-table-wrapper .ant-table-tbody > tr:hover > td {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* 3. 隐藏原生滚动条，追求极致纯净 */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+/* 4. 优雅的选区高亮 */
+::selection {
+  background: rgba(124, 58, 237, 0.3);
+  color: #fff;
+}
+
+/* 5. 通用高级面板样式（用于包裹页面图表） */
+.panel-surface {
+  background: #141418;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.02),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+  padding: 24px;
+}
+
+/* 登录页输入框高光 */
+.cyber-input:hover {
+  border-color: rgba(124, 58, 237, 0.5) !important;
+}
+.cyber-input:focus,
+.cyber-input-focused {
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+}
+.cyber-input input {
+  background: transparent !important;
+  color: #ededed !important;
+}
+.cyber-input input::placeholder {
+  color: #52525b !important;
+}
+
+/* 💡 升级版：极光呼吸动画（振幅更大，位移更远） */
+@keyframes pulse-glow {
+  0% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.3) translate(60px, 60px);
+    opacity: 1;
+  }
+}
+
+/* 💡 新增：中心脉冲闪烁 */
+@keyframes center-pulse {
+  0% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  100% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+/* 💡 新增：卡片从底部升起的平滑动画 */
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
