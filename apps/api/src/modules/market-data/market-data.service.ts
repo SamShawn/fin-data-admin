@@ -132,4 +132,19 @@ export class MarketDataService {
 
     return result;
   }
+
+  // 新增：获取指定股票的历史 K 线数据（默认最近 100 个交易日）
+  async getKlineData(stockCode: string, limit: number = 100) {
+    const qb = this.quoteRepo
+      .createQueryBuilder('q')
+      .innerJoin('stocks', 's', 's.stock_code = q.stock_code')
+      .select(['q.trade_date', 'q.open', 'q.high', 'q.low', 'q.close', 'q.volume', 'q.amount'])
+      .where('q.stock_code = :stockCode', { stockCode })
+      .orderBy('q.trade_date', 'DESC')
+      .limit(limit);
+
+    const rows = await qb.getRawMany();
+    // 因为按日期倒序查的，返回给前端画图前需要正序排列
+    return rows.reverse();
+  }
 }
