@@ -146,13 +146,22 @@ export class MarketDataService {
     const qb = this.quoteRepo
       .createQueryBuilder('q')
       .innerJoin('stocks', 's', 's.stock_code = q.stock_code')
-      .select(['q.trade_date', 'q.open', 'q.high', 'q.low', 'q.close', 'q.volume', 'q.amount'])
+      // 👇 关键修复：使用 AS 覆盖默认的 q_ 前缀
+      .select([
+        'q.trade_date AS trade_date',
+        'q.open AS open',
+        'q.high AS high',
+        'q.low AS low',
+        'q.close AS close',
+        'q.volume AS volume',
+        'q.amount AS amount',
+      ])
       .where('q.stock_code = :stockCode', { stockCode })
       .orderBy('q.trade_date', 'DESC')
       .limit(limit);
 
     const rows = await qb.getRawMany();
-    // 因为按日期倒序查的，返回给前端画图前需要正序排列
+    // 保证返回给前端的是正序排列的日期
     return rows.reverse();
   }
 }

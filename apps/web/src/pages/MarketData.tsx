@@ -26,6 +26,7 @@ import { apiClient } from '../api/client';
 import { KLineChart, KLineData } from '../components/KLineChart';
 import { VirtualTable } from '../components/VirtualTable';
 import { useMarketData, MarketDataItem, Filters, downloadCsv } from '../hooks/useMarketData';
+import { formatNumber, formatPercent, getChangeColor, formatDate } from '../utils/format';
 
 type DataColumn = ColumnDef<MarketDataItem, unknown> & { accessorKey: string };
 
@@ -123,7 +124,9 @@ export default function MarketDataPage() {
         accessorKey: 'trade_date',
         header: '日期',
         enableSorting: true,
-        cell: ({ getValue }) => <span style={{ color: '#a1a1aa' }}>{getValue() as string}</span>,
+        cell: ({ getValue }) => (
+          <span style={{ color: '#a1a1aa' }}>{formatDate(getValue() as string)}</span>
+        ),
       },
       {
         accessorKey: 'open',
@@ -146,12 +149,10 @@ export default function MarketDataPage() {
         header: '涨跌幅',
         enableSorting: true,
         cell: ({ getValue }) => {
-          const val = Number(getValue()) * 100;
-          const color = val > 0 ? '#f43f5e' : val < 0 ? '#10b981' : '#a1a1aa'; // 霓虹红 / 翡翠绿
+          const val = Number(getValue());
           return (
-            <span style={{ color, fontWeight: 600, fontSize: 13 }}>
-              {val > 0 ? '+' : ''}
-              {val.toFixed(2)}%
+            <span style={{ color: getChangeColor(val), fontWeight: 600, fontSize: 13 }}>
+              {formatPercent(val)}
             </span>
           );
         },
@@ -161,7 +162,7 @@ export default function MarketDataPage() {
         header: '成交量',
         enableSorting: true,
         cell: ({ getValue }) => (
-          <span style={{ color: '#a1a1aa' }}>{(Number(getValue()) / 10000).toFixed(2)} 万</span>
+          <span style={{ color: '#a1a1aa' }}>{formatNumber(getValue() as number)}</span>
         ),
       },
       {

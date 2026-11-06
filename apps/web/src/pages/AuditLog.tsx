@@ -2,6 +2,7 @@ import { Table, Tag } from 'antd';
 import { useEffect, useState } from 'react';
 
 import { apiClient } from '../api/client';
+import { formatDateTime } from '../utils/format';
 
 // 定义审计日志的类型
 interface AuditLogItem {
@@ -31,7 +32,12 @@ export default function AuditLogPage() {
   }, []);
 
   const columns = [
-    { title: '时间', dataIndex: 'createdAt', key: 'createdAt' },
+    {
+      title: '时间',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (val: string) => <span style={{ color: '#71717a' }}>{formatDateTime(val)}</span>,
+    },
     { title: '操作人', dataIndex: 'username', key: 'username' },
     { title: '模块', dataIndex: 'module', key: 'module' },
     {
