@@ -71,7 +71,12 @@ export class AuthService {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
       });
 
-      const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+      // 👇 修复：必须带上 relations 查询角色和权限
+      const user = await this.userRepo.findOne({
+        where: { id: payload.sub },
+        relations: ['roles', 'roles.permissions'],
+      });
+
       if (!user || user.status !== 1) {
         throw new UnauthorizedException('用户不存在或已禁用');
       }
