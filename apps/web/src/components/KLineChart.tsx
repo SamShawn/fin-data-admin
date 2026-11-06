@@ -26,7 +26,12 @@ interface TooltipParam {
 export function KLineChart({ data, stockName }: KLineChartProps) {
   const option = useMemo(() => {
     const dates = data.map((item) => item.trade_date);
-    const values = data.map((item) => [item.open, item.close, item.low, item.high]);
+    const values = data.map((item) => [
+      Number(item.open),
+      Number(item.close),
+      Number(item.low),
+      Number(item.high),
+    ]);
 
     // 提取成交量
     const volumes = data.map((item) => ({
@@ -67,13 +72,19 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
           'backdrop-filter: blur(12px); box-shadow: 0 12px 32px rgba(0,0,0,0.6); border-radius: 8px; padding: 12px;',
         // 自定义悬浮窗内容
         formatter: (params: TooltipParam[]) => {
-          const candleParam = params.find((p) => p.seriesName === '日K');
+          const candleParam = params.find((p: TooltipParam) => p.seriesName === '日K');
           if (!candleParam) return '';
 
           const idx = candleParam.dataIndex;
           const item = data[idx];
-          const prevClose = idx > 0 ? data[idx - 1].close : item.open;
-          const change = item.close - prevClose;
+
+          // 👇 加一层防御判断
+          if (!item || item.open === undefined) return '';
+
+          const prevClose = idx > 0 ? Number(data[idx - 1].close) : Number(item.open);
+          const currentClose = Number(item.close);
+
+          const change = currentClose - prevClose;
           const pctChange = (change / prevClose) * 100;
           const color = change > 0 ? '#f43f5e' : change < 0 ? '#10b981' : '#a1a1aa';
 
@@ -83,15 +94,15 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 2px 12px 2px 0; color: #a1a1aa;">开盘</td>
-                  <td style="text-align: right; font-weight: 500;">${item.open.toFixed(2)}</td>
+                  <td style="text-align: right; font-weight: 500;">${Number(item.open).toFixed(2)}</td>
                   <td style="padding: 2px 12px 2px 12px; color: #a1a1aa;">收盘</td>
-                  <td style="text-align: right; font-weight: 500; color: ${color};">${item.close.toFixed(2)}</td>
+                  <td style="text-align: right; font-weight: 500; color: ${color};">${currentClose.toFixed(2)}</td>
                 </tr>
                 <tr>
                   <td style="padding: 2px 12px 2px 0; color: #a1a1aa;">最高</td>
-                  <td style="text-align: right; font-weight: 500;">${item.high.toFixed(2)}</td>
+                  <td style="text-align: right; font-weight: 500;">${Number(item.high).toFixed(2)}</td>
                   <td style="padding: 2px 12px 2px 12px; color: #a1a1aa;">最低</td>
-                  <td style="text-align: right; font-weight: 500;">${item.low.toFixed(2)}</td>
+                  <td style="text-align: right; font-weight: 500;">${Number(item.low).toFixed(2)}</td>
                 </tr>
                 <tr>
                   <td style="padding: 2px 12px 2px 0; color: #a1a1aa;">涨跌</td>
