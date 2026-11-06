@@ -5,11 +5,11 @@ import { formatNumber } from '../utils/format';
 
 export interface KLineData {
   trade_date: string;
-  open: number;
-  close: number;
-  low: number;
-  high: number;
-  volume: number;
+  open: number | string;
+  close: number | string;
+  low: number | string;
+  high: number | string;
+  volume: number | string;
 }
 
 interface KLineChartProps {
@@ -26,6 +26,8 @@ interface TooltipParam {
 export function KLineChart({ data, stockName }: KLineChartProps) {
   const option = useMemo(() => {
     const dates = data.map((item) => item.trade_date);
+
+    // 👇 强制转为 Number，防止字符串拼接导致计算错误
     const values = data.map((item) => [
       Number(item.open),
       Number(item.close),
@@ -33,13 +35,12 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
       Number(item.high),
     ]);
 
-    // 提取成交量
     const volumes = data.map((item) => ({
-      value: item.volume,
-      itemStyle: { color: item.close > item.open ? '#f43f5e' : '#10b981' },
+      value: Number(item.volume),
+      itemStyle: { color: Number(item.close) > Number(item.open) ? '#f43f5e' : '#10b981' },
     }));
 
-    // 计算 MA 均线（取前5天为例，简单实现）
+    // 👇 均线计算逻辑强化
     const calculateMA = (dayCount: number) => {
       const result = [];
       for (let i = 0, len = data.length; i < len; i++) {
@@ -49,7 +50,7 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
         }
         let sum = 0;
         for (let j = 0; j < dayCount; j++) {
-          sum += data[i - j].close;
+          sum += Number(data[i - j].close); // 强制数字相加
         }
         result.push((sum / dayCount).toFixed(2));
       }
@@ -60,11 +61,24 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
       backgroundColor: 'transparent',
       animation: true,
 
-      // 💡 高级 Tooltip 定制
+      title: {
+        text: `${stockName} 走势`,
+        left: 'center',
+        textStyle: { fontSize: 16, fontWeight: 500, color: '#ededed' },
+      },
+
+      // 👇 图例强制选中
+      legend: {
+        data: ['MA5', 'MA10', 'MA20'],
+        top: 30,
+        selectedMode: true, // 允许点击隐藏/显示
+        textStyle: { color: '#a1a1aa' },
+      },
+
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'cross', label: { backgroundColor: '#27272a' } },
-        backgroundColor: 'rgba(20, 20, 24, 0.85)', // 深度毛玻璃底
+        backgroundColor: 'rgba(20, 20, 24, 0.85)',
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.1)',
         textStyle: { color: '#ededed' },
@@ -125,24 +139,11 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
         lineStyle: { color: 'rgba(124, 58, 237, 0.5)', type: 'dashed' },
       },
 
-      // 💡 图例与标题
-      title: {
-        text: `${stockName} 走势`,
-        left: 'center',
-        textStyle: { fontSize: 16, fontWeight: 500, color: '#ededed' },
-      },
-      legend: {
-        data: ['MA5', 'MA10', 'MA20'],
-        top: 30,
-        textStyle: { color: '#a1a1aa' },
-      },
-
       grid: [
         { left: '4%', right: '4%', top: '15%', height: '55%' },
         { left: '4%', right: '4%', top: '76%', height: '15%' },
       ],
 
-      // 💡 坐标轴全暗化
       xAxis: [
         {
           type: 'category',
@@ -172,7 +173,7 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
       yAxis: [
         {
           scale: true,
-          splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)' } }, // 几乎不可见的网格
+          splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)' } },
           axisLabel: { color: '#71717a', fontSize: 11 },
         },
         {
@@ -186,13 +187,14 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
         },
       ],
       dataZoom: [
-        { type: 'inside', xAxisIndex: [0, 1], start: 50, end: 100 },
+        // 👇 把默认缩放改为 0 到 100，让刚开始就能看到所有数据
+        { type: 'inside', xAxisIndex: [0, 1], start: 0, end: 100 },
         {
           show: true,
           xAxisIndex: [0, 1],
           type: 'slider',
           top: '92%',
-          start: 50,
+          start: 0,
           end: 100,
           borderColor: 'transparent',
           fillerColor: 'rgba(124, 58, 237, 0.15)',
@@ -216,13 +218,14 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
             borderColor0: '#10b981',
           },
         },
+        // 👇 加粗均线，并加入线条平滑，在深色背景下更明显
         {
           name: 'MA5',
           type: 'line',
           data: calculateMA(5),
           smooth: true,
           showSymbol: false,
-          lineStyle: { width: 1, color: '#a78bfa' },
+          lineStyle: { width: 2, color: '#a78bfa', opacity: 0.8 },
         },
         {
           name: 'MA10',
@@ -230,7 +233,7 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
           data: calculateMA(10),
           smooth: true,
           showSymbol: false,
-          lineStyle: { width: 1, color: '#fbbf24' },
+          lineStyle: { width: 2, color: '#fbbf24', opacity: 0.8 },
         },
         {
           name: 'MA20',
@@ -238,7 +241,7 @@ export function KLineChart({ data, stockName }: KLineChartProps) {
           data: calculateMA(20),
           smooth: true,
           showSymbol: false,
-          lineStyle: { width: 1, color: '#06b6d4' },
+          lineStyle: { width: 2, color: '#06b6d4', opacity: 0.8 },
         },
         {
           name: '成交量',
