@@ -19,6 +19,8 @@ import {
   Drawer,
   Tooltip,
   Divider,
+  Skeleton,
+  Empty,
 } from 'antd';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 
@@ -337,16 +339,48 @@ export default function MarketDataPage() {
           borderTop: 'none',
         }}
       >
-        <VirtualTable
-          data={data}
-          columns={allColumns}
-          fetchNextPage={fetchNextPage}
-          hasMore={hasMore}
-          loading={loading}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          columnVisibility={columnVisibility}
-        />
+        {/* 👇 首次加载且没有数据时，显示骨架屏 */}
+        {loading && data.length === 0 ? (
+          <div style={{ padding: '24px' }}>
+            <Skeleton active paragraph={{ rows: 10 }} />
+          </div>
+        ) : data.length === 0 && !loading ? (
+          <div
+            style={{
+              padding: '80px 0',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={<span style={{ color: '#71717a' }}>未找到符合条件的股票</span>}
+            />
+            <Button
+              type="primary"
+              ghost
+              style={{ marginTop: 16 }}
+              onClick={() => {
+                setForm({});
+                reset({});
+              }}
+            >
+              清空筛选条件
+            </Button>
+          </div>
+        ) : (
+          <VirtualTable
+            data={data}
+            columns={allColumns}
+            fetchNextPage={fetchNextPage}
+            hasMore={hasMore}
+            loading={loading}
+            sorting={sorting}
+            onSortingChange={setSorting}
+            columnVisibility={columnVisibility}
+          />
+        )}
       </div>
 
       {/* K 线抽屉：毛玻璃背景 */}
